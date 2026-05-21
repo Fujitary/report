@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>活動日報</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="活動日報">
+<meta name="theme-color" content="#2563a8">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --blue: #2563a8;
+    --blue-light: #dbeafe;
+    --blue-mid: #93c5fd;
+    --gray: #6b7280;
+    --gray-light: #f3f4f6;
+    --border: #d1d5db;
+    --text: #1f2937;
+    --white: #ffffff;
+    --accent: #1e40af;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Noto Sans JP', sans-serif; background: #e8edf5; min-height: 100vh; color: var(--text); }
+  #app { display: flex; flex-direction: column; min-height: 100vh; }
+
+  header {
+    background: var(--blue); color: white; padding: 14px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+  header h1 { font-family: 'Noto Serif JP', serif; font-size: 18px; font-weight: 700; letter-spacing: 0.05em; }
+  .header-btn {
+    background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4);
+    color: white; padding: 6px 14px; border-radius: 6px; font-size: 13px;
+    font-family: 'Noto Sans JP', sans-serif; cursor: pointer; transition: background 0.2s;
+  }
+  .header-btn:hover { background: rgba(255,255,255,0.3); }
+  .header-btn.primary { background: white; color: var(--blue); font-weight: 500; }
+
+  .tab-bar {
+    display: flex; background: white; border-bottom: 2px solid var(--blue-light);
+    position: sticky; top: 53px; z-index: 99;
+  }
+  .tab {
+    flex: 1; padding: 10px 4px; text-align: center; font-size: 12px;
+    color: var(--gray); cursor: pointer; transition: all 0.2s;
+    border-bottom: 3px solid transparent; margin-bottom: -2px;
+  }
+  .tab.active { color: var(--blue); border-bottom-color: var(--blue); font-weight: 700; }
+  .tab .tab-icon { font-size: 18px; display: block; margin-bottom: 2px; }
+
+  main { flex: 1; padding: 16px; max-width: 600px; margin: 0 auto; width: 100%; }
+
+  .section-card {
+    background: white; border-radius: 10px; margin-bottom: 16px;
+    overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
+  .section-header {
+    background: var(--blue); color: white; padding: 8px 14px;
+    font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px;
+  }
+  .section-header::before { content: '■'; font-size: 10px; }
+  .section-body { padding: 14px; }
+
+  .form-row { display: flex; gap: 10px; margin-bottom: 12px; align-items: center; flex-wrap: wrap; }
+  .form-group { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 80px; }
+  label { font-size: 11px; color: var(--gray); font-weight: 500; }
+
+  input[type="text"], input[type="date"], input[type="time"], input[type="number"], select, textarea {
+    border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px;
+    font-size: 14px; font-family: 'Noto Sans JP', sans-serif; color: var(--text);
+    background: #fafafa; transition: border-color 0.2s, box-shadow 0.2s;
+    width: 100%; -webkit-appearance: none;
+  }
+  input:focus, select:focus, textarea:focus {
+    outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,168,0.15); background: white;
+  }
+  textarea { resize: none; line-height: 1.6; }
+  .inline-label { font-size: 13px; white-space: nowrap; color: var(--text); }
+
+  /* 文字数カウンター */
+  .textarea-wrap { position: relative; }
+  .char-counter {
+    text-align: right; font-size: 11px; margin-top: 4px;
+    color: var(--gray); transition: color 0.2s;
+  }
+  .char-counter.warn { color: #f59e0b; font-weight: 700; }
+  .char-counter.over { color: #ef4444; font-weight: 700; }
+  .char-bar {
+    height: 3px; border-radius: 2px; background: var(--border);
+    margin-top: 3px; overflow: hidden;
+  }
+  .char-bar-fill {
+    height: 100%; border-radius: 2px;
+    background: var(--blue); transition: width 0.2s, background 0.2s;
+  }
+
+  /* 参加者グリッド */
+  .participant-group-label {
+    font-size: 12px; font-weight: 700; color: var(--blue);
+    background: var(--blue-light); padding: 5px 10px; border-radius: 6px;
+    margin-bottom: 8px; margin-top: 4px;
+  }
+  .participant-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;
+  }
+  .participant-item { display: flex; flex-direction: column; gap: 3px; }
+  .participant-item label { font-size: 11px; }
+  .participant-item input {
+    padding: 6px 8px; font-size: 13px; text-align: center;
+  }
+  .participant-total {
+    background: var(--blue-light); border-radius: 6px; padding: 8px 12px;
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 4px;
+  }
+  .participant-total span { font-size: 13px; color: var(--blue); font-weight: 700; }
+
+  /* 写真 */
+  .photo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .photo-slot {
+    position: relative; background: var(--blue-light); border: 2px dashed var(--blue-mid);
+    border-radius: 8px; aspect-ratio: 4/3; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; overflow: hidden;
+  }
+  .photo-slot:hover { border-color: var(--blue); background: #dbeafe; }
+  .photo-slot img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 6px; }
+  .photo-slot .photo-label-overlay {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: rgba(0,0,0,0.5); color: white; font-size: 11px; padding: 4px 6px; display: none;
+  }
+  .photo-slot.has-img .photo-label-overlay { display: block; }
+  .photo-slot .placeholder-text { font-size: 11px; color: var(--blue); text-align: center; }
+  .photo-slot .placeholder-icon { font-size: 28px; margin-bottom: 4px; }
+  .photo-caption { margin-top: 6px; display: flex; gap: 6px; align-items: center; }
+  .photo-caption input { flex: 1; font-size: 12px; padding: 5px 8px; }
+  .remove-photo {
+    background: #ef4444; color: white; border: none; border-radius: 4px;
+    width: 24px; height: 24px; font-size: 14px; cursor: pointer;
+    display: none; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  input[type="file"] { display: none; }
+
+  /* ボタン */
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 20px; border-radius: 8px; font-size: 14px; font-family: 'Noto Sans JP', sans-serif; font-weight: 500; cursor: pointer; border: none; transition: all 0.2s; }
+  .btn-primary { background: var(--blue); color: white; width: 100%; padding: 14px; font-size: 15px; border-radius: 10px; box-shadow: 0 2px 8px rgba(37,99,168,0.3); }
+  .btn-primary:hover { background: var(--accent); transform: translateY(-1px); }
+  .btn-outline { background: white; color: var(--blue); border: 1.5px solid var(--blue); }
+  .btn-outline:hover { background: var(--blue-light); }
+
+  /* プレビュー */
+  .preview-container { background: white; border-radius: 10px; padding: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.12); }
+  .preview-title { font-family: 'Noto Serif JP', serif; font-size: 20px; font-weight: 700; text-align: center; margin-bottom: 16px; letter-spacing: 0.1em; }
+  .pv-section { margin-bottom: 14px; }
+  .pv-header { background: var(--blue); color: white; padding: 5px 10px; font-size: 12px; font-weight: 700; margin-bottom: 8px; border-radius: 4px 4px 0 0; }
+  .pv-header::before { content: '■ '; font-size: 9px; }
+  .pv-body { border: 1px solid var(--border); border-top: none; padding: 10px; font-size: 12px; line-height: 1.7; border-radius: 0 0 4px 4px; }
+  .pv-field { margin-bottom: 4px; }
+  .pv-label { font-size: 10px; color: var(--gray); margin-bottom: 2px; }
+  .pv-value { font-size: 12px; min-height: 18px; border-bottom: 1px solid var(--border); padding-bottom: 2px; }
+  .pv-text { white-space: pre-wrap; min-height: 30px; }
+  .pv-photos { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .pv-photo img { width: 100%; aspect-ratio: 4/3; object-fit: cover; border: 1px solid var(--border); border-radius: 4px; }
+  .pv-photo-cap { font-size: 10px; color: var(--gray); text-align: center; margin-top: 2px; }
+
+  /* トースト */
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: #1f2937; color: white; padding: 10px 20px; border-radius: 20px; font-size: 13px; z-index: 1000; transition: transform 0.3s ease; white-space: nowrap; }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ===== 印刷用 A4 ===== */
+  #print-area { display: none; }
+
+  @media print {
+    @page { size: A4; margin: 10mm 12mm 8mm; }
+    body > #app { display: none !important; }
+    #print-area {
+      display: block !important;
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: 8.5pt;
+      color: #000;
+      line-height: 1.4;
+    }
+
+    .pr-title {
+      text-align: center;
+      font-family: 'Noto Serif JP', serif;
+      font-size: 15pt;
+      font-weight: 700;
+      margin-bottom: 4mm;
+      letter-spacing: 0.1em;
+    }
+
+    .pr-section { margin-bottom: 3mm; page-break-inside: avoid; }
+
+    .pr-section-header {
+      background: #2563a8 !important;
+      color: white !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+      padding: 2px 7px;
+      font-size: 8.5pt;
+      font-weight: 700;
+      margin-bottom: 1.5mm;
+    }
+    .pr-section-header::before { content: '■ '; }
+
+    .pr-table { width: 100%; border-collapse: collapse; font-size: 8pt; }
+    .pr-table td { padding: 2px 5px; border: 0.4pt solid #bbb; vertical-align: middle; }
+    .pr-label-cell { color: #555; white-space: nowrap; background: #f5f7fa !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; width: 14mm; font-weight: 500; }
+
+    .pr-text-box {
+      border: 0.4pt solid #bbb;
+      padding: 2mm 3mm;
+      white-space: pre-wrap;
+      font-size: 8pt;
+      line-height: 1.5;
+    }
+    .pr-small-label { font-size: 7.5pt; color: #555; margin-bottom: 0.5mm; font-weight: 500; }
+
+    /* 参加者テーブル */
+    .pr-pax-table { width: 100%; border-collapse: collapse; font-size: 7.5pt; }
+    .pr-pax-table td { padding: 2px 4px; border: 0.4pt solid #bbb; text-align: center; }
+    .pr-pax-table .pr-pax-group { background: #dbeafe !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; font-weight: 700; color: #1e40af; }
+    .pr-pax-table .pr-pax-label { background: #f5f7fa !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; font-size: 7pt; color: #444; }
+    .pr-pax-table .pr-pax-total { background: #eff6ff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; font-weight: 700; color: #1e40af; }
+
+    /* 写真 */
+    .pr-photo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; }
+    .pr-photo-item img { width: 100%; max-height: 52mm; object-fit: cover; border: 0.4pt solid #bbb; display: block; }
+    .pr-photo-item .no-photo { width: 100%; height: 45mm; border: 0.4pt solid #ccc; display: flex; align-items: center; justify-content: center; color: #bbb; font-size: 7.5pt; }
+    .pr-photo-caption { font-size: 7pt; color: #555; margin-top: 0.5mm; border-top: 0.3pt solid #eee; padding-top: 0.5mm; }
+
+    .pr-footer { margin-top: 3mm; border-top: 0.4pt solid #ccc; padding-top: 2mm; font-size: 7pt; color: #999; display: flex; justify-content: space-between; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>📋 活動日報</h1>
+    <div style="display:flex;gap:8px;">
+      <button class="header-btn" onclick="switchView('edit')" id="btn-edit">編集</button>
+      <button class="header-btn" onclick="switchView('preview')" id="btn-preview">プレビュー</button>
+      <button class="header-btn primary" onclick="printReport()">🖨 印刷</button>
+    </div>
+  </header>
+
+  <div class="tab-bar">
+    <div class="tab active" onclick="switchTab(0)" id="tab0"><span class="tab-icon">📄</span>基本情報</div>
+    <div class="tab" onclick="switchTab(1)" id="tab1"><span class="tab-icon">✏️</span>活動記録</div>
+    <div class="tab" onclick="switchTab(2)" id="tab2"><span class="tab-icon">📷</span>写真記録</div>
+  </div>
+
+  <main>
+    <div id="edit-view">
+
+      <!-- TAB 0: 基本情報 -->
+      <div id="section-tab0">
+        <div class="section-card">
+          <div class="section-header">基本情報</div>
+          <div class="section-body">
+            <div class="form-row">
+              <div class="form-group" style="flex:2">
+                <label>日付</label>
+                <input type="date" id="f-date">
+              </div>
+              <div class="form-group" style="flex:0.7">
+                <label>曜日</label>
+                <input type="text" id="f-day" maxlength="1" style="text-align:center;">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>開始時間</label>
+                <input type="time" id="f-time-start">
+              </div>
+              <div class="inline-label" style="margin-top:20px;">〜</div>
+              <div class="form-group">
+                <label>終了時間</label>
+                <input type="time" id="f-time-end">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>記録者</label>
+                <input type="text" id="f-recorder" placeholder="氏名">
+              </div>
+              <div class="form-group">
+                <label>場所</label>
+                <input type="text" id="f-place" placeholder="活動場所">
+              </div>
+              <div class="form-group" style="flex:0.8">
+                <label>天候</label>
+                <select id="f-weather">
+                  <option value="">-</option>
+                  <option>晴れ</option><option>曇り</option><option>雨</option><option>雪</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 参加者 -->
+        <div class="section-card">
+          <div class="section-header">参加者</div>
+          <div class="section-body">
+            <div class="participant-group-label">👧 こども</div>
+            <div class="participant-grid">
+              <div class="participant-item">
+                <label>未就学児</label>
+                <input type="number" id="p-preschool" min="0" placeholder="0" oninput="calcTotal()">
+              </div>
+              <div class="participant-item">
+                <label>小学生</label>
+                <input type="number" id="p-elementary" min="0" placeholder="0" oninput="calcTotal()">
+              </div>
+              <div class="participant-item">
+                <label>中学生</label>
+                <input type="number" id="p-junior" min="0" placeholder="0" oninput="calcTotal()">
+              </div>
+              <div class="participant-item">
+                <label>高校生</label>
+                <input type="number" id="p-senior" min="0" placeholder="0" oninput="calcTotal()">
+              </div>
+            </div>
+
+            <div class="participant-group-label">👨 大人</div>
+            <div class="participant-grid">
+              <div class="participant-item">
+                <label>学校関係</label>
+                <input type="number" id="p-school" min="0" placeholder="0" oninput="calcTotal()">
+              </div>
+              <div class="participant-item">
+                <label>地域住民</label>
+                <input type="number" id="p-community" min="0" placeholder="0" oninput="calcTotal()">
+              </div>
+              <div class="participant-item">
+                <label>大学生</label>
+                <input type="number" id="p-univ" min="0" placeholder="0" oninput="calcTotal()">
+              </div>
+              <div class="participant-item">
+                <label>その他</label>
+                <input type="number" id="p-other" min="0" placeholder="0" oninput="calcTotal()">
+              </div>
+            </div>
+
+            <div class="participant-total">
+              <span id="total-display">合計 0名　｜　こども 0名　大人 0名</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 1: 活動記録 -->
+      <div id="section-tab1" style="display:none;">
+        <div class="section-card">
+          <div class="section-header">活動の記録</div>
+          <div class="section-body">
+            <div class="form-group" style="margin-bottom:14px;">
+              <label>【実施内容】<span style="color:var(--gray);font-weight:400;">（300字以内）</span></label>
+              <div class="textarea-wrap">
+                <textarea id="f-content" rows="7" maxlength="300" placeholder="実施した活動内容を詳しく記録してください" oninput="updateCounter('f-content','cnt-content',300)"></textarea>
+                <div class="char-counter" id="cnt-content">0 / 300 文字</div>
+                <div class="char-bar"><div class="char-bar-fill" id="bar-content" style="width:0%"></div></div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>【所感・気づき・課題】<span style="color:var(--gray);font-weight:400;">（200字以内）</span></label>
+              <div class="textarea-wrap">
+                <textarea id="f-impression" rows="5" maxlength="200" placeholder="感じたこと、気づいたこと、今後の課題など" oninput="updateCounter('f-impression','cnt-impression',200)"></textarea>
+                <div class="char-counter" id="cnt-impression">0 / 200 文字</div>
+                <div class="char-bar"><div class="char-bar-fill" id="bar-impression" style="width:0%"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="switchView('preview')" style="margin-bottom:20px;">
+          👁 プレビューを確認する
+        </button>
+      </div>
+
+      <!-- TAB 2: 写真記録 -->
+      <div id="section-tab2" style="display:none;">
+        <div class="section-card">
+          <div class="section-header">写真記録</div>
+          <div class="section-body">
+            <div class="photo-grid">
+              <div>
+                <div class="photo-slot" id="slot0" onclick="document.getElementById('file0').click()">
+                  <span class="placeholder-icon">📷</span><span class="placeholder-text">写真を添付</span>
+                  <div class="photo-label-overlay" id="overlay0"></div>
+                </div>
+                <input type="file" id="file0" accept="image/*" onchange="handlePhoto(0,this)">
+                <div class="photo-caption">
+                  <input type="text" id="cap0" placeholder="キャプション">
+                  <button class="remove-photo" id="rm0" onclick="removePhoto(0)">✕</button>
+                </div>
+              </div>
+              <div>
+                <div class="photo-slot" id="slot1" onclick="document.getElementById('file1').click()">
+                  <span class="placeholder-icon">📷</span><span class="placeholder-text">写真を添付</span>
+                  <div class="photo-label-overlay" id="overlay1"></div>
+                </div>
+                <input type="file" id="file1" accept="image/*" onchange="handlePhoto(1,this)">
+                <div class="photo-caption">
+                  <input type="text" id="cap1" placeholder="キャプション">
+                  <button class="remove-photo" id="rm1" onclick="removePhoto(1)">✕</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="printReport()" style="margin-bottom:20px;">
+          🖨 印刷・PDF保存
+        </button>
+      </div>
+
+    </div><!-- /edit-view -->
+
+    <!-- PREVIEW VIEW -->
+    <div id="preview-view" style="display:none;">
+      <div class="preview-container" id="preview-content"></div>
+      <div style="margin-top:16px;display:flex;gap:10px;">
+        <button class="btn btn-outline" onclick="switchView('edit')" style="flex:1;">← 編集に戻る</button>
+        <button class="btn btn-primary" onclick="printReport()" style="flex:1;">🖨 印刷・PDF保存</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div id="print-area"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+let photos = [null,null];
+let currentTab = 0;
+
+// 起動時に今日の日付
+window.addEventListener('load', () => {
+  const today = new Date();
+  document.getElementById('f-date').value = today.toISOString().split('T')[0];
+  updateDay();
+  document.getElementById('f-date').addEventListener('change', updateDay);
+});
+
+function updateDay() {
+  const d = new Date(document.getElementById('f-date').value + 'T00:00:00');
+  document.getElementById('f-day').value = ['日','月','火','水','木','金','土'][d.getDay()];
+}
+
+// 文字数カウンター
+function updateCounter(fieldId, counterId, max) {
+  const val = document.getElementById(fieldId).value;
+  const len = val.length;
+  const pct = Math.min(len / max * 100, 100);
+  const counter = document.getElementById(counterId);
+  const bar = document.getElementById('bar-' + fieldId.replace('f-',''));
+  counter.textContent = `${len} / ${max} 文字`;
+  counter.className = 'char-counter' + (len >= max ? ' over' : len >= max * 0.8 ? ' warn' : '');
+  if (bar) {
+    bar.style.width = pct + '%';
+    bar.style.background = len >= max ? '#ef4444' : len >= max * 0.8 ? '#f59e0b' : '#2563a8';
+  }
+}
+
+// 参加者合計
+function calcTotal() {
+  const ids = ['p-preschool','p-elementary','p-junior','p-senior','p-school','p-community','p-univ','p-other'];
+  const pax = getPaxValues();
+  document.getElementById('total-display').textContent =
+    `合計 ${pax.total}名　｜　こども ${pax.kids}名　大人 ${pax.adults}名`;
+}
+
+function getPaxValues() {
+  return {
+    preschool: parseInt(document.getElementById('p-preschool').value)||0,
+    elementary: parseInt(document.getElementById('p-elementary').value)||0,
+    junior: parseInt(document.getElementById('p-junior').value)||0,
+    senior: parseInt(document.getElementById('p-senior').value)||0,
+    school: parseInt(document.getElementById('p-school').value)||0,
+    community: parseInt(document.getElementById('p-community').value)||0,
+    univ: parseInt(document.getElementById('p-univ').value)||0,
+    other: parseInt(document.getElementById('p-other').value)||0,
+    get total() { return this.preschool+this.elementary+this.junior+this.senior+this.school+this.community+this.univ+this.other; },
+    get kids() { return this.preschool+this.elementary+this.junior+this.senior; },
+    get adults() { return this.school+this.community+this.univ+this.other; }
+  };
+}
+
+// タブ
+function switchTab(n) {
+  for (let i=0;i<3;i++) {
+    document.getElementById(`tab${i}`).classList.toggle('active', i===n);
+    document.getElementById(`section-tab${i}`).style.display = i===n ? '' : 'none';
+  }
+  currentTab = n;
+}
+
+// ビュー
+function switchView(v) {
+  document.getElementById('edit-view').style.display = v==='edit' ? '' : 'none';
+  document.getElementById('preview-view').style.display = v==='preview' ? '' : 'none';
+  if (v==='preview') renderPreview();
+}
+
+// 写真
+function handlePhoto(idx, input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    photos[idx] = e.target.result;
+    const slot = document.getElementById(`slot${idx}`);
+    const old = slot.querySelector('img'); if (old) old.remove();
+    const img = document.createElement('img'); img.src = e.target.result; slot.appendChild(img);
+    slot.classList.add('has-img');
+    document.getElementById(`rm${idx}`).style.display = 'flex';
+    document.getElementById(`overlay${idx}`).textContent = file.name;
+  };
+  reader.readAsDataURL(file);
+}
+function removePhoto(idx) {
+  photos[idx] = null;
+  const slot = document.getElementById(`slot${idx}`);
+  const img = slot.querySelector('img'); if (img) img.remove();
+  slot.classList.remove('has-img');
+  document.getElementById(`rm${idx}`).style.display = 'none';
+  document.getElementById(`file${idx}`).value = '';
+  document.getElementById(`overlay${idx}`).textContent = '';
+}
+
+// プレビュー
+function renderPreview() {
+  const date = document.getElementById('f-date').value;
+  const day = document.getElementById('f-day').value;
+  const ts = document.getElementById('f-time-start').value;
+  const te = document.getElementById('f-time-end').value;
+  const recorder = document.getElementById('f-recorder').value;
+  const place = document.getElementById('f-place').value;
+  const weather = document.getElementById('f-weather').value;
+  const content = document.getElementById('f-content').value;
+  const impression = document.getElementById('f-impression').value;
+  const pax = getPaxValues();
+
+  const dateStr = date ? `${date.replace(/-/g,'/')}（${day}）` : '';
+  const timeStr = ts||te ? `${ts||'　'}〜${te||'　'}` : '';
+
+  let photosHtml = '<div class="pv-photos">';
+  for (let i=0;i<2;i++) {
+    const cap = document.getElementById(`cap${i}`).value;
+    photosHtml += `<div class="pv-photo">${photos[i]
+      ? `<img src="${photos[i]}" alt="写真${i+1}">`
+      : `<div style="background:#f0f4f8;border:1px dashed #ccc;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;color:#aaa;font-size:11px;border-radius:4px;">[ 写真なし ]</div>`
+    }${cap?`<div class="pv-photo-cap">📌 ${cap}</div>`:''}</div>`;
+  }
+  photosHtml += '</div>';
+
+  document.getElementById('preview-content').innerHTML = `
+    <div class="preview-title">活 動 日 報</div>
+    <div class="pv-section">
+      <div class="pv-header">基本情報</div>
+      <div class="pv-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:6px;">
+          <div class="pv-field"><div class="pv-label">日付</div><div class="pv-value">${dateStr||'　'}</div></div>
+          <div class="pv-field"><div class="pv-label">時間</div><div class="pv-value">${timeStr||'　'}</div></div>
+          <div class="pv-field"><div class="pv-label">天候</div><div class="pv-value">${weather||'　'}</div></div>
+          <div class="pv-field"><div class="pv-label">記録者</div><div class="pv-value">${recorder||'　'}</div></div>
+          <div class="pv-field" style="grid-column:span 2"><div class="pv-label">場所</div><div class="pv-value">${place||'　'}</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="pv-section">
+      <div class="pv-header">参加者</div>
+      <div class="pv-body">
+        <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:6px;">合計 ${pax.total}名　｜　こども ${pax.kids}名　大人 ${pax.adults}名</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:3px;font-size:10px;color:#555;margin-bottom:4px;">
+          <span>未就学児 ${pax.preschool}</span><span>小学生 ${pax.elementary}</span><span>中学生 ${pax.junior}</span><span>高校生 ${pax.senior}</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:3px;font-size:10px;color:#555;">
+          <span>学校 ${pax.school}</span><span>地域 ${pax.community}</span><span>大学生 ${pax.univ}</span><span>その他 ${pax.other}</span>
+        </div>
+      </div>
+    </div>
+    <div class="pv-section">
+      <div class="pv-header">活動の記録</div>
+      <div class="pv-body">
+        <div style="margin-bottom:8px;"><div class="pv-label">【実施内容】</div><div class="pv-text">${content||'（未記入）'}</div></div>
+        <div><div class="pv-label">【所感・気づき・課題】</div><div class="pv-text">${impression||'（未記入）'}</div></div>
+      </div>
+    </div>
+    <div class="pv-section">
+      <div class="pv-header">写真記録</div>
+      <div class="pv-body">${photosHtml}</div>
+    </div>
+  `;
+}
+
+// 印刷
+function printReport() {
+  const date = document.getElementById('f-date').value;
+  const day = document.getElementById('f-day').value;
+  const ts = document.getElementById('f-time-start').value;
+  const te = document.getElementById('f-time-end').value;
+  const recorder = document.getElementById('f-recorder').value;
+  const place = document.getElementById('f-place').value;
+  const weather = document.getElementById('f-weather').value;
+  const content = document.getElementById('f-content').value;
+  const impression = document.getElementById('f-impression').value;
+  const pax = getPaxValues();
+
+  const dateStr = date ? `${date.replace(/-/g,'/')}（${day}）` : '　年　月　日（　）';
+  const timeStr = `${ts||'　：　'} ～ ${te||'　：　'}`;
+
+  let photosHtml = '<div class="pr-photo-grid">';
+  for (let i=0;i<2;i++) {
+    const cap = document.getElementById(`cap${i}`).value;
+    photosHtml += `<div class="pr-photo-item">${photos[i]
+      ? `<img src="${photos[i]}" alt="写真${i+1}">`
+      : `<div class="no-photo">[ 写真${i+1} ]</div>`
+    }<div class="pr-photo-caption">${cap||`写真${i+1}`}</div></div>`;
+  }
+  photosHtml += '</div>';
+
+  const now = new Date().toLocaleString('ja-JP');
+
+  document.getElementById('print-area').innerHTML = `
+    <div class="pr-title">活 動 日 報</div>
+
+    <div class="pr-section">
+      <div class="pr-section-header">基本情報</div>
+      <table class="pr-table">
+        <tr>
+          <td class="pr-label-cell">日付</td><td>${dateStr}</td>
+          <td class="pr-label-cell">時間</td><td>${timeStr}</td>
+          <td class="pr-label-cell">天候</td><td>${weather||'　'}</td>
+        </tr>
+        <tr>
+          <td class="pr-label-cell">記録者</td><td>${recorder||'　'}</td>
+          <td class="pr-label-cell">場所</td><td colspan="3">${place||'　'}</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="pr-section">
+      <div class="pr-section-header">参加者　合計 ${pax.total}名　｜　こども ${pax.kids}名　大人 ${pax.adults}名</div>
+      <table class="pr-pax-table">
+        <tr>
+          <td class="pr-pax-label">未就学児</td>
+          <td class="pr-pax-label">小学生</td>
+          <td class="pr-pax-label">中学生</td>
+          <td class="pr-pax-label">高校生</td>
+          <td class="pr-pax-label">学校関係</td>
+          <td class="pr-pax-label">地域住民</td>
+          <td class="pr-pax-label">大学生</td>
+          <td class="pr-pax-label">その他</td>
+        </tr>
+        <tr>
+          <td>${pax.preschool||'0'}</td>
+          <td>${pax.elementary||'0'}</td>
+          <td>${pax.junior||'0'}</td>
+          <td>${pax.senior||'0'}</td>
+          <td>${pax.school||'0'}</td>
+          <td>${pax.community||'0'}</td>
+          <td>${pax.univ||'0'}</td>
+          <td>${pax.other||'0'}</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="pr-section">
+      <div class="pr-section-header">活動の記録</div>
+      <div style="margin-bottom:2mm;">
+        <div class="pr-small-label">【実施内容】</div>
+        <div class="pr-text-box" style="min-height:38mm;">${content||'　'}</div>
+      </div>
+      <div>
+        <div class="pr-small-label">【所感・気づき・課題】</div>
+        <div class="pr-text-box" style="min-height:28mm;">${impression||'　'}</div>
+      </div>
+    </div>
+
+    <div class="pr-section">
+      <div class="pr-section-header">写真記録</div>
+      ${photosHtml}
+    </div>
+
+    <div class="pr-footer">
+      <span>leal.lab 活動日報</span>
+      <span>出力日時：${now}</span>
+    </div>
+  `;
+
+  showToast('印刷ダイアログを開いています…');
+  setTimeout(() => window.print(), 300);
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+<script>
+// Service Worker 登録
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => console.log('SW registered:', reg.scope))
+      .catch(err => console.log('SW error:', err));
+  });
+}
+</script>
+</body>
+</html>
