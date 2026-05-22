@@ -11,7 +11,6 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   :root {
@@ -699,171 +698,208 @@ function printReport() {
   setTimeout(() => window.print(), 300);
 }
 
-// ===== PDF生成 =====
+// ===== PDF生成（jsPDF テキスト描画方式・軽量） =====
 async function generatePDF() {
-  showToast('PDFを生成中…少しお待ちください');
+  showToast('PDFを生成中…');
 
-  // データ収集
   const date = document.getElementById('f-date').value;
   const day  = document.getElementById('f-day').value;
   const ts   = document.getElementById('f-time-start').value;
   const te   = document.getElementById('f-time-end').value;
-  const recorder = document.getElementById('f-recorder').value;
-  const place    = document.getElementById('f-place').value;
-  const weather  = document.getElementById('f-weather').value;
-  const content  = document.getElementById('f-content').value;
+  const recorder   = document.getElementById('f-recorder').value;
+  const place      = document.getElementById('f-place').value;
+  const weather    = document.getElementById('f-weather').value;
+  const content    = document.getElementById('f-content').value;
   const impression = document.getElementById('f-impression').value;
   const pax = getPaxValues();
+  const cap0 = document.getElementById('cap0').value || '写真1';
+  const cap1 = document.getElementById('cap1').value || '写真2';
+
   const dateStr = date ? date.replace(/-/g,'/') + `（${day}）` : '';
-  const timeStr = (ts||te) ? `${ts||'　'}〜${te||'　'}` : '';
+  const timeStr = (ts||te) ? `${ts||'  '}〜${te||'  '}` : '';
   const now = new Date().toLocaleString('ja-JP');
   const fileName = `活動日報_${date||'日付未設定'}.pdf`;
 
-  // A4レンダリング用の隠しDIV構築
-  const wrap = document.createElement('div');
-  wrap.style.cssText = [
-    'position:fixed','top:-9999px','left:-9999px',
-    'width:794px',            // 96dpi A4幅
-    'background:white',
-    'font-family:Noto Sans JP,sans-serif',
-    'font-size:11px',
-    'color:#000',
-    'padding:40px 45px',
-    'box-sizing:border-box',
-    'line-height:1.5'
-  ].join(';');
-
-  // 写真HTML
-  let photoHtml = '';
-  for (let i=0;i<2;i++) {
-    const cap = document.getElementById(`cap${i}`).value || `写真${i+1}`;
-    if (photos[i]) {
-      photoHtml += `<div style="flex:1;min-width:0;">
-        <img src="${photos[i]}" style="width:100%;max-height:140px;object-fit:cover;border:1px solid #ccc;display:block;">
-        <div style="font-size:9px;color:#555;margin-top:2px;border-top:1px solid #eee;padding-top:2px;">${cap}</div>
-      </div>`;
-    } else {
-      photoHtml += `<div style="flex:1;min-width:0;">
-        <div style="width:100%;height:110px;border:1px solid #ccc;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:10px;">[ 写真${i+1} ]</div>
-        <div style="font-size:9px;color:#555;margin-top:2px;">${cap}</div>
-      </div>`;
-    }
-  }
-
-  wrap.innerHTML = `
-    <!-- タイトル -->
-    <div style="text-align:center;font-size:20px;font-weight:700;letter-spacing:0.1em;margin-bottom:16px;font-family:Noto Serif JP,serif;">活 動 日 報</div>
-
-    <!-- 基本情報 -->
-    <div style="margin-bottom:10px;">
-      <div style="background:#2563a8;color:white;padding:3px 8px;font-size:10px;font-weight:700;margin-bottom:4px;">■ 基本情報</div>
-      <table style="width:100%;border-collapse:collapse;font-size:10px;">
-        <tr>
-          <td style="padding:3px 6px;border:0.5px solid #bbb;background:#f5f7fa;white-space:nowrap;width:12%;">日付</td>
-          <td style="padding:3px 6px;border:0.5px solid #bbb;width:28%;">${dateStr||'　'}</td>
-          <td style="padding:3px 6px;border:0.5px solid #bbb;background:#f5f7fa;white-space:nowrap;width:10%;">時間</td>
-          <td style="padding:3px 6px;border:0.5px solid #bbb;width:26%;">${timeStr||'　'}</td>
-          <td style="padding:3px 6px;border:0.5px solid #bbb;background:#f5f7fa;white-space:nowrap;width:8%;">天候</td>
-          <td style="padding:3px 6px;border:0.5px solid #bbb;">${weather||'　'}</td>
-        </tr>
-        <tr>
-          <td style="padding:3px 6px;border:0.5px solid #bbb;background:#f5f7fa;">記録者</td>
-          <td style="padding:3px 6px;border:0.5px solid #bbb;">${recorder||'　'}</td>
-          <td style="padding:3px 6px;border:0.5px solid #bbb;background:#f5f7fa;">場所</td>
-          <td style="padding:3px 6px;border:0.5px solid #bbb;" colspan="3">${place||'　'}</td>
-        </tr>
-      </table>
-    </div>
-
-    <!-- 参加者 -->
-    <div style="margin-bottom:10px;">
-      <div style="background:#2563a8;color:white;padding:3px 8px;font-size:10px;font-weight:700;margin-bottom:4px;">■ 参加者　合計 ${pax.total}名　｜　こども ${pax.kids}名　大人 ${pax.adults}名</div>
-      <table style="width:100%;border-collapse:collapse;font-size:9.5px;text-align:center;">
-        <tr>
-          <td style="padding:2px 4px;border:0.5px solid #bbb;background:#f5f7fa;">未就学児</td>
-          <td style="padding:2px 4px;border:0.5px solid #bbb;background:#f5f7fa;">小学生</td>
-          <td style="padding:2px 4px;border:0.5px solid #bbb;background:#f5f7fa;">中学生</td>
-          <td style="padding:2px 4px;border:0.5px solid #bbb;background:#f5f7fa;">高校生</td>
-          <td style="padding:2px 4px;border:0.5px solid #bbb;background:#f5f7fa;">学校関係</td>
-          <td style="padding:2px 4px;border:0.5px solid #bbb;background:#f5f7fa;">地域住民</td>
-          <td style="padding:2px 4px;border:0.5px solid #bbb;background:#f5f7fa;">大学生</td>
-          <td style="padding:2px 4px;border:0.5px solid #bbb;background:#f5f7fa;">その他</td>
-        </tr>
-        <tr>
-          <td style="padding:3px 4px;border:0.5px solid #bbb;">${pax.preschool}</td>
-          <td style="padding:3px 4px;border:0.5px solid #bbb;">${pax.elementary}</td>
-          <td style="padding:3px 4px;border:0.5px solid #bbb;">${pax.junior}</td>
-          <td style="padding:3px 4px;border:0.5px solid #bbb;">${pax.senior}</td>
-          <td style="padding:3px 4px;border:0.5px solid #bbb;">${pax.school}</td>
-          <td style="padding:3px 4px;border:0.5px solid #bbb;">${pax.community}</td>
-          <td style="padding:3px 4px;border:0.5px solid #bbb;">${pax.univ}</td>
-          <td style="padding:3px 4px;border:0.5px solid #bbb;">${pax.other}</td>
-        </tr>
-      </table>
-    </div>
-
-    <!-- 活動記録 -->
-    <div style="margin-bottom:10px;">
-      <div style="background:#2563a8;color:white;padding:3px 8px;font-size:10px;font-weight:700;margin-bottom:4px;">■ 活動の記録</div>
-      <div style="font-size:9px;color:#555;margin-bottom:2px;font-weight:500;">【実施内容】</div>
-      <div style="border:0.5px solid #bbb;padding:6px 8px;min-height:68px;font-size:10px;white-space:pre-wrap;line-height:1.6;margin-bottom:6px;">${content||'　'}</div>
-      <div style="font-size:9px;color:#555;margin-bottom:2px;font-weight:500;">【所感・気づき・課題】</div>
-      <div style="border:0.5px solid #bbb;padding:6px 8px;min-height:50px;font-size:10px;white-space:pre-wrap;line-height:1.6;">${impression||'　'}</div>
-    </div>
-
-    <!-- 写真 -->
-    <div style="margin-bottom:10px;">
-      <div style="background:#2563a8;color:white;padding:3px 8px;font-size:10px;font-weight:700;margin-bottom:6px;">■ 写真記録</div>
-      <div style="display:flex;gap:12px;">${photoHtml}</div>
-    </div>
-
-    <!-- フッター -->
-    <div style="margin-top:8px;border-top:0.5px solid #ccc;padding-top:4px;font-size:8px;color:#999;display:flex;justify-content:space-between;">
-      <span>leal.lab 活動日報</span>
-      <span>出力日時：${now}</span>
-    </div>
-  `;
-
-  document.body.appendChild(wrap);
-
   try {
-    // フォント読み込み待ち
-    await document.fonts.ready;
-
-    const canvas = await html2canvas(wrap, {
-      scale: 2,
-      useCORS: true,
-      backgroundColor: '#ffffff',
-      logging: false
-    });
-
-    document.body.removeChild(wrap);
-
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
-    const pageW = 210, pageH = 297;
-    const imgW = pageW;
-    const imgH = (canvas.height / canvas.width) * pageW;
+    // ===== 定数 =====
+    const PW = 210, PH = 297;
+    const ML = 12, MR = 12, MT = 12;
+    const CW = PW - ML - MR; // コンテンツ幅 186mm
+    let y = MT;
 
-    // A4に収まる場合はそのまま、はみ出す場合はスケール縮小
-    if (imgH <= pageH) {
-      pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, imgW, imgH);
-    } else {
-      const scale = pageH / imgH;
-      pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, imgW * scale, pageH);
+    // ===== ヘルパ =====
+    const blue  = [37, 99, 168];
+    const white = [255, 255, 255];
+    const lgray = [245, 247, 250];
+    const dgray = [85, 85, 85];
+    const bbrd  = [187, 187, 187];
+
+    function sectionHeader(label) {
+      pdf.setFillColor(...blue);
+      pdf.rect(ML, y, CW, 5.5, 'F');
+      pdf.setTextColor(...white);
+      pdf.setFontSize(8.5); pdf.setFont('helvetica','bold');
+      pdf.text('■ ' + label, ML + 2, y + 3.8);
+      pdf.setTextColor(0,0,0);
+      y += 5.5 + 1.5;
     }
+
+    function tableRow(cols) {
+      // cols: [{label, value, w}]  w in mm
+      const h = 5.5;
+      let x = ML;
+      cols.forEach(({label, value, w, isLabel}) => {
+        if (isLabel) {
+          pdf.setFillColor(...lgray);
+          pdf.rect(x, y, w, h, 'FD');
+          pdf.setDrawColor(...bbrd);
+          pdf.setTextColor(...dgray);
+          pdf.setFontSize(7.5); pdf.setFont('helvetica','normal');
+          pdf.text(label, x + 1.5, y + 3.8);
+        } else {
+          pdf.setFillColor(255,255,255);
+          pdf.rect(x, y, w, h, 'FD');
+          pdf.setDrawColor(...bbrd);
+          pdf.setTextColor(0,0,0);
+          pdf.setFontSize(8); pdf.setFont('helvetica','normal');
+          pdf.text(String(value||''), x + 1.5, y + 3.8, {maxWidth: w - 3});
+        }
+        x += w;
+      });
+      y += h;
+    }
+
+    function textBox(label, text, minH) {
+      const lineH = 4.5;
+      const maxW  = CW - 4;
+      pdf.setFontSize(7.5); pdf.setFont('helvetica','normal');
+      pdf.setTextColor(...dgray);
+      pdf.text(label, ML, y + 3); y += 4;
+
+      const lines = pdf.splitTextToSize(text || '　', maxW);
+      const boxH  = Math.max(minH, lines.length * lineH + 4);
+
+      pdf.setDrawColor(...bbrd);
+      pdf.setFillColor(255,255,255);
+      pdf.rect(ML, y, CW, boxH, 'FD');
+      pdf.setTextColor(0,0,0);
+      pdf.setFontSize(8.5); pdf.setFont('helvetica','normal');
+      pdf.text(lines, ML + 2, y + 4);
+      y += boxH + 2;
+    }
+
+    // ===== タイトル =====
+    pdf.setFontSize(18); pdf.setFont('helvetica','bold');
+    pdf.setTextColor(0,0,0);
+    pdf.text('活動日報', PW/2, y + 8, {align:'center'});
+    y += 14;
+
+    // ===== 基本情報 =====
+    sectionHeader('基本情報');
+    const c1=24, c2=52, c3=16, c4=46, c5=16, c6=CW-c1-c2-c3-c4-c5;
+    tableRow([
+      {label:'日付',    w:c1, isLabel:true},
+      {value:dateStr,   w:c2},
+      {label:'時間',    w:c3, isLabel:true},
+      {value:timeStr,   w:c4},
+      {label:'天候',    w:c5, isLabel:true},
+      {value:weather,   w:c6},
+    ]);
+    tableRow([
+      {label:'記録者',  w:c1, isLabel:true},
+      {value:recorder,  w:c2},
+      {label:'場所',    w:c3, isLabel:true},
+      {value:place,     w:c4+c5+c6},
+    ]);
+    y += 3;
+
+    // ===== 参加者 =====
+    sectionHeader(`参加者　合計 ${pax.total}名  ｜  こども ${pax.kids}名  大人 ${pax.adults}名`);
+    const pw = CW / 8;
+    const labels = ['未就学児','小学生','中学生','高校生','学校関係','地域住民','大学生','その他'];
+    const values = [pax.preschool,pax.elementary,pax.junior,pax.senior,pax.school,pax.community,pax.univ,pax.other];
+    // ラベル行
+    let x = ML;
+    labels.forEach(l => {
+      pdf.setFillColor(...lgray); pdf.rect(x, y, pw, 4.5, 'FD');
+      pdf.setDrawColor(...bbrd);
+      pdf.setTextColor(...dgray); pdf.setFontSize(7); pdf.setFont('helvetica','normal');
+      pdf.text(l, x + pw/2, y + 3.2, {align:'center'});
+      x += pw;
+    });
+    y += 4.5;
+    // 値行
+    x = ML;
+    values.forEach(v => {
+      pdf.setFillColor(255,255,255); pdf.rect(x, y, pw, 5, 'FD');
+      pdf.setDrawColor(...bbrd);
+      pdf.setTextColor(0,0,0); pdf.setFontSize(9); pdf.setFont('helvetica','bold');
+      pdf.text(String(v), x + pw/2, y + 3.6, {align:'center'});
+      x += pw;
+    });
+    y += 5 + 3;
+
+    // ===== 活動記録 =====
+    sectionHeader('活動の記録');
+    textBox('【実施内容】', content, 28);
+    textBox('【所感・気づき・課題】', impression, 20);
+    y += 1;
+
+    // ===== 写真記録 =====
+    sectionHeader('写真記録');
+    const photoW = (CW - 4) / 2;
+    const photoH = photoW * 0.68;
+
+    // 写真を縮小してPDFに埋め込む関数
+    async function addPhoto(src, px, py, pw2, ph2, caption) {
+      if (!src) {
+        pdf.setDrawColor(...bbrd);
+        pdf.rect(px, py, pw2, ph2, 'D');
+        pdf.setTextColor(180,180,180); pdf.setFontSize(8);
+        pdf.text('[ 写真なし ]', px + pw2/2, py + ph2/2, {align:'center'});
+      } else {
+        // リサイズして容量削減
+        const canvas = document.createElement('canvas');
+        const MAX = 600;
+        const img = new Image(); img.src = src;
+        await new Promise(r => { img.onload = r; img.onerror = r; });
+        const scale = Math.min(1, MAX / Math.max(img.width, img.height));
+        canvas.width  = img.width  * scale;
+        canvas.height = img.height * scale;
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        const jpeg = canvas.toDataURL('image/jpeg', 0.7);
+        pdf.addImage(jpeg, 'JPEG', px, py, pw2, ph2);
+        pdf.setDrawColor(...bbrd); pdf.rect(px, py, pw2, ph2, 'D');
+      }
+      pdf.setTextColor(...dgray); pdf.setFontSize(7.5);
+      pdf.text(caption, px + 1, py + ph2 + 3.5);
+    }
+
+    await addPhoto(photos[0], ML,           y, photoW, photoH, cap0);
+    await addPhoto(photos[1], ML+photoW+4,  y, photoW, photoH, cap1);
+    y += photoH + 6;
+
+    // ===== フッター =====
+    pdf.setDrawColor(...bbrd);
+    pdf.line(ML, y, ML+CW, y); y += 3;
+    pdf.setFontSize(7); pdf.setFont('helvetica','normal');
+    pdf.setTextColor(160,160,160);
+    pdf.text('leal.lab 活動日報', ML, y);
+    pdf.text('出力日時：' + now, ML+CW, y, {align:'right'});
 
     pdf.save(fileName);
     showToast('PDFを保存しました ✓');
+
   } catch(e) {
-    if (document.body.contains(wrap)) document.body.removeChild(wrap);
     console.error(e);
-    showToast('PDF生成に失敗しました');
+    showToast('PDF生成に失敗しました: ' + e.message);
   }
 }
 
-
+function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 3000);
