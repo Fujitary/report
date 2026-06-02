@@ -541,6 +541,8 @@ function switchTab(n) {
 function switchView(v) {
   document.getElementById('edit-view').style.display = v==='edit' ? '' : 'none';
   document.getElementById('preview-view').style.display = v==='preview' ? '' : 'none';
+  document.getElementById('btn-edit').style.fontWeight    = v==='edit'    ? '700' : '400';
+  document.getElementById('btn-preview').style.fontWeight = v==='preview' ? '700' : '400';
   if (v==='preview') renderPreview();
 }
 
@@ -1097,18 +1099,33 @@ async function saveToSheet() {
 }
 
 
+function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 3000);
 }
 </script>
 <script>
-// Service Worker 登録
+// Service Worker 登録 + 古いSWを強制更新
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js')
-      .then(reg => console.log('SW registered:', reg.scope))
-      .catch(err => console.log('SW error:', err));
+  window.addEventListener('load', async () => {
+    try {
+      const reg = await navigator.serviceWorker.register('./sw.js');
+      // 新しいSWが待機中なら即座に有効化
+      if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+      reg.addEventListener('updatefound', () => {
+        const newSW = reg.installing;
+        newSW.addEventListener('statechange', () => {
+          if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
+            newSW.postMessage({ type: 'SKIP_WAITING' });
+            window.location.reload();
+          }
+        });
+      });
+      console.log('SW registered:', reg.scope);
+    } catch(err) {
+      console.log('SW error:', err);
+    }
   });
 }
 </script>

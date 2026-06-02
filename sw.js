@@ -1,5 +1,5 @@
 // バージョンを上げると古いキャッシュが自動削除される
-const CACHE_NAME = 'katsudo-nippo-v3';
+const CACHE_NAME = 'katsudo-nippo-v5';
 const CORE_ASSETS = [
   './index.html',
   './manifest.json',
@@ -12,8 +12,15 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => cache.addAll(CORE_ASSETS))
-      .then(() => self.skipWaiting())
+      .then(() => self.skipWaiting()) // 常に即座に有効化
   );
+});
+
+// メッセージ受信（ページからの強制更新指示）
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 // アクティベート：古いバージョンのキャッシュを全削除
