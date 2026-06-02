@@ -152,6 +152,9 @@
   .btn-primary:hover { background: var(--accent); transform: translateY(-1px); }
   .btn-outline { background: white; color: var(--blue); border: 1.5px solid var(--blue); }
   .btn-outline:hover { background: var(--blue-light); }
+  .btn-sheet { background: #059669; color: white; width: 100%; padding: 12px; font-size: 14px; border-radius: 10px; box-shadow: 0 2px 8px rgba(5,150,105,0.3); border: none; font-family: 'Noto Sans JP', sans-serif; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .btn-sheet:hover { background: #047857; }
+  .btn-sheet:disabled { background: #9ca3af; box-shadow: none; cursor: not-allowed; }
 
   /* プレビュー */
   .preview-container { background: white; border-radius: 10px; padding: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.12); }
@@ -352,9 +355,41 @@
             <div class="participant-total">
               <span id="total-display">合計 0名　｜　こども 0名　大人 0名</span>
             </div>
+
+            <!-- スプレッドシート送信ボタン -->
+            <div style="margin-top:12px;">
+              <button class="btn btn-sheet" onclick="saveToSheet()" id="btn-save-sheet">
+                📊 スプレッドシートに記録
+              </button>
+              <div id="sheet-status" style="margin-top:6px;font-size:11px;text-align:center;color:var(--gray);min-height:16px;"></div>
+            </div>
           </div>
         </div>
-      </div>
+
+        <!-- GAS URL設定カード -->
+        <div class="section-card" id="gas-setting-card">
+          <div class="section-header">スプレッドシート連携設定</div>
+          <div class="section-body">
+            <div class="form-group">
+              <label>GAS WebアプリのURL <span style="color:#ef4444;">※初回のみ設定</span></label>
+              <input type="text" id="gas-url" placeholder="https://script.google.com/macros/s/..." style="font-size:12px;">
+            </div>
+            <button class="btn btn-outline" onclick="saveGasUrl()" style="width:100%;margin-top:8px;padding:8px;">
+              URLを保存する
+            </button>
+            <div style="margin-top:10px;padding:10px;background:var(--blue-light);border-radius:6px;font-size:11px;line-height:1.8;color:#1e40af;">
+              設定方法：<br>
+              ① Googleスプレッドシートを新規作成<br>
+              ② 拡張機能 → Apps Script → gas_code.js の内容を貼り付け<br>
+              ③ SPREADSHEET_ID を入力して保存<br>
+              ④ デプロイ → 新しいデプロイ → ウェブアプリ<br>
+              ⑤ アクセス：「全員」に設定してデプロイ<br>
+              ⑥ 表示されたURLをここに貼り付けて保存
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /section-tab0 -->
 
       <!-- TAB 1: 活動記録 -->
       <div id="section-tab1" style="display:none;">
@@ -446,6 +481,7 @@ window.addEventListener('load', () => {
   document.getElementById('f-date').value = today.toISOString().split('T')[0];
   updateDay();
   document.getElementById('f-date').addEventListener('change', updateDay);
+  loadGasUrl();
 });
 
 function updateDay() {
@@ -969,7 +1005,98 @@ async function generatePDF() {
   }
 }
 
-function showToast(msg) {
+// ===== GAS URL 保存・読み込み =====
+function saveGasUrl() {
+  const url = document.getElementById('gas-url').value.trim();
+  if (!url.startsWith('https://script.google.com')) {
+    showToast('正しいGAS URLを入力してください');
+    return;
+  }
+  localStorage.setItem('gasUrl', url);
+  showToast('URLを保存しました ✓');
+  updateGasStatus();
+}
+
+function loadGasUrl() {
+  const saved = localStorage.getItem('gasUrl') || '';
+  document.getElementById('gas-url').value = saved;
+  updateGasStatus();
+}
+
+function updateGasStatus() {
+  const url = localStorage.getItem('gasUrl');
+  const card = document.getElementById('gas-setting-card');
+  const status = document.getElementById('sheet-status');
+  if (url) {
+    card.style.display = 'none'; // URL設定済みなら設定カードを折りたたむ
+    status.innerHTML = `<span style="color:#059669;">✓ 連携済み</span>　<a href="#" onclick="document.getElementById('gas-setting-card').style.display='';return false;" style="color:var(--blue);font-size:10px;">URL変更</a>`;
+  } else {
+    card.style.display = '';
+    status.textContent = 'URLが未設定です';
+  }
+}
+
+// ===== スプレッドシートに記録 =====
+async function saveToSheet() {
+  const gasUrl = localStorage.getItem('gasUrl');
+  if (!gasUrl) {
+    showToast('GAS URLを先に設定してください');
+    document.getElementById('gas-setting-card').style.display = '';
+    return;
+  }
+
+  const pax = getPaxValues();
+  const btn = document.getElementById('btn-save-sheet');
+  const status = document.getElementById('sheet-status');
+
+  btn.disabled = true;
+  btn.textContent = '送信中…';
+  status.textContent = '';
+
+  const payload = {
+    date:       document.getElementById('f-date').value,
+    day:        document.getElementById('f-day').value,
+    timeStart:  document.getElementById('f-time-start').value,
+    timeEnd:    document.getElementById('f-time-end').value,
+    recorder:   document.getElementById('f-recorder').value,
+    place:      document.getElementById('f-place').value,
+    weather:    document.getElementById('f-weather').value,
+    preschool:  pax.preschool,
+    elementary: pax.elementary,
+    junior:     pax.junior,
+    senior:     pax.senior,
+    kidsTotal:  pax.kids,
+    school:     pax.school,
+    community:  pax.community,
+    univ:       pax.univ,
+    otherAdult: pax.other,
+    adultsTotal:pax.adults,
+    grandTotal: pax.total,
+  };
+
+  try {
+    // GASはCORSの都合でno-corsで送る → レスポンスは読めないがデータは届く
+    await fetch(gasUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    btn.disabled = false;
+    btn.innerHTML = '📊 スプレッドシートに記録';
+    status.innerHTML = `<span style="color:#059669;">✓ ${payload.date} の記録を送信しました</span>`;
+    showToast('スプレッドシートに記録しました ✓');
+  } catch(e) {
+    btn.disabled = false;
+    btn.innerHTML = '📊 スプレッドシートに記録';
+    status.innerHTML = `<span style="color:#ef4444;">送信失敗：ネットワークを確認してください</span>`;
+    showToast('送信に失敗しました');
+    console.error(e);
+  }
+}
+
+
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 3000);
