@@ -2,934 +2,1148 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>活動日報</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="領収書">
-<meta name="theme-color" content="#1e1b16">
-<title>領収書作成</title>
+<meta name="apple-mobile-web-app-title" content="活動日報">
+<meta name="theme-color" content="#2563a8">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700&family=Noto+Sans+JP:wght@400;500&display=swap');
+  :root {
+    --blue: #2563a8;
+    --blue-light: #dbeafe;
+    --blue-mid: #93c5fd;
+    --gray: #6b7280;
+    --gray-light: #f3f4f6;
+    --border: #d1d5db;
+    --text: #1f2937;
+    --white: #ffffff;
+    --accent: #1e40af;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Noto Sans JP', sans-serif; background: #e8edf5; min-height: 100vh; color: var(--text); }
+  #app { display: flex; flex-direction: column; min-height: 100vh; }
 
-:root {
-  --bg:      #1a1710;
-  --surface: #242018;
-  --card:    #2c2820;
-  --border:  #3e3628;
-  --gold:    #c8a855;
-  --gold2:   #8b6914;
-  --text:    #e8e4dc;
-  --muted:   #7a6e60;
-  --green:   #1e4d2b;
-  --green2:  #b8e8c8;
-  --red:     #4d1e1e;
-  --red2:    #e8b8b8;
-  --ink:     #1a1a1a;
-  --paper-border: #c8c0b0;
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --safe-top:    env(safe-area-inset-top, 0px);
-}
+  header {
+    background: var(--blue); color: white; padding: 14px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+  header h1 { font-family: 'Noto Serif JP', serif; font-size: 18px; font-weight: 700; letter-spacing: 0.05em; }
+  .header-btn {
+    background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4);
+    color: white; padding: 6px 14px; border-radius: 6px; font-size: 13px;
+    font-family: 'Noto Sans JP', sans-serif; cursor: pointer; transition: background 0.2s;
+  }
+  .header-btn:hover { background: rgba(255,255,255,0.3); }
+  .header-btn.primary { background: white; color: var(--blue); font-weight: 500; }
 
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  .tab-bar {
+    display: flex; background: white; border-bottom: 2px solid var(--blue-light);
+    position: sticky; top: 53px; z-index: 99;
+  }
+  .tab {
+    flex: 1; padding: 10px 4px; text-align: center; font-size: 12px;
+    color: var(--gray); cursor: pointer; transition: all 0.2s;
+    border-bottom: 3px solid transparent; margin-bottom: -2px;
+  }
+  .tab.active { color: var(--blue); border-bottom-color: var(--blue); font-weight: 700; }
+  .tab .tab-icon { font-size: 18px; display: block; margin-bottom: 2px; }
 
-html, body {
-  height: 100%;
-  background: var(--bg);
-  color: var(--text);
-  font-family: 'Noto Sans JP', sans-serif;
-  overscroll-behavior: none;
-}
+  main { flex: 1; padding: 16px; max-width: 600px; margin: 0 auto; width: 100%; }
 
-/* ===== APP SHELL ===== */
-#app {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  max-width: 520px;
-  margin: 0 auto;
-  position: relative;
-}
+  .section-card {
+    background: white; border-radius: 10px; margin-bottom: 16px;
+    overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
+  .section-header {
+    background: var(--blue); color: white; padding: 8px 14px;
+    font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px;
+  }
+  .section-header::before { content: '■'; font-size: 10px; }
+  .section-body { padding: 14px; }
 
-/* ===== TOP BAR ===== */
-#topbar {
-  background: var(--card);
-  border-bottom: 1px solid var(--border);
-  padding: 0 16px;
-  padding-top: var(--safe-top);
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  height: calc(52px + var(--safe-top));
-  flex-shrink: 0;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-#topbar h1 {
-  font-family: 'Noto Serif JP', serif;
-  font-size: 16px;
-  letter-spacing: 0.2em;
-  color: var(--gold);
-  flex: 1;
-}
-#btn-settings {
-  background: none;
-  border: none;
-  color: var(--muted);
-  font-size: 22px;
-  cursor: pointer;
-  padding: 6px;
-  border-radius: 6px;
-  line-height: 1;
-}
+  .form-row { display: flex; gap: 10px; margin-bottom: 12px; align-items: center; flex-wrap: wrap; }
+  .form-group { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 80px; }
+  label { font-size: 11px; color: var(--gray); font-weight: 500; }
 
-/* ===== TAB BAR ===== */
-#tabbar {
-  display: flex;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-}
-.tab-btn {
-  flex: 1;
-  padding: 12px 0;
-  background: none;
-  border: none;
-  color: var(--muted);
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 13px;
-  letter-spacing: 0.05em;
-  cursor: pointer;
-  border-bottom: 2px solid transparent;
-  transition: color 0.2s, border-color 0.2s;
-}
-.tab-btn.active {
-  color: var(--gold);
-  border-bottom-color: var(--gold);
-}
+  input[type="text"], input[type="date"], input[type="time"], input[type="number"], select, textarea {
+    border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px;
+    font-size: 14px; font-family: 'Noto Sans JP', sans-serif; color: var(--text);
+    background: #fafafa; transition: border-color 0.2s, box-shadow 0.2s;
+    width: 100%; -webkit-appearance: none;
+  }
+  input:focus, select:focus, textarea:focus {
+    outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,168,0.15); background: white;
+  }
+  textarea { resize: none; line-height: 1.6; }
+  .inline-label { font-size: 13px; white-space: nowrap; color: var(--text); }
 
-/* ===== SCROLL CONTENT ===== */
-#content {
-  flex: 1;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* ===== TAB PANELS ===== */
-.tab-panel { display: none; }
-.tab-panel.active { display: block; }
-
-/* ===== FORM ===== */
-#form-panel {
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
-.form-section {
-  background: var(--card);
-  border-radius: 12px;
-  overflow: hidden;
-  margin-bottom: 14px;
-}
-.form-section-title {
-  font-size: 10px;
-  letter-spacing: 0.2em;
-  color: var(--muted);
-  padding: 10px 16px 6px;
-  text-transform: uppercase;
-  border-bottom: 1px solid var(--border);
-}
-
-.field {
-  display: flex;
-  align-items: center;
-  padding: 0 16px;
-  border-bottom: 1px solid var(--border);
-  min-height: 52px;
-}
-.field:last-child { border-bottom: none; }
-
-.field label {
-  font-size: 13px;
-  color: var(--muted);
-  width: 80px;
-  flex-shrink: 0;
-  line-height: 1.3;
-}
-.field label.wide { width: 96px; }
-
-.field input,
-.field select {
-  flex: 1;
-  background: none;
-  border: none;
-  color: var(--text);
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 15px;
-  padding: 14px 0;
-  outline: none;
-  text-align: right;
-  min-width: 0;
-}
-.field input::placeholder { color: #4a4035; }
-.field select {
-  -webkit-appearance: none;
-  appearance: none;
-  text-align: right;
-}
-
-.field-textarea {
-  flex-direction: column;
-  align-items: flex-start;
-  padding: 10px 16px;
-  gap: 6px;
-}
-.field-textarea label {
-  width: auto;
-  font-size: 12px;
-}
-.field-textarea textarea {
-  width: 100%;
-  background: none;
-  border: none;
-  color: var(--text);
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 14px;
-  outline: none;
-  resize: none;
-  min-height: 60px;
-  line-height: 1.6;
-}
-.field-textarea textarea::placeholder { color: #4a4035; }
-
-/* 印鑑 */
-.seal-row {
-  flex-direction: column;
-  align-items: flex-start;
-  padding: 12px 16px;
-  gap: 10px;
-}
-.seal-row label { width: auto; font-size: 12px; }
-.seal-trigger {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-}
-.seal-thumb {
-  width: 52px; height: 52px;
-  border-radius: 8px;
-  border: 1px dashed var(--border);
-  background: var(--surface);
-  display: flex; align-items: center; justify-content: center;
-  color: var(--muted); font-size: 22px;
-  overflow: hidden; flex-shrink: 0;
-  position: relative; cursor: pointer;
-}
-.seal-thumb img { width: 100%; height: 100%; object-fit: contain; }
-.seal-thumb input[type=file] {
-  position: absolute; inset: 0; opacity: 0; cursor: pointer;
-  width: 100%; height: 100%;
-}
-.seal-info { flex: 1; font-size: 12px; color: var(--muted); line-height: 1.6; }
-.seal-clear {
-  background: none; border: 1px solid var(--border);
-  color: var(--muted); border-radius: 6px;
-  padding: 4px 12px; font-size: 12px; cursor: pointer;
-}
-
-/* ===== ACTION BUTTONS ===== */
-#action-panel {
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding-bottom: calc(16px + var(--safe-bottom));
-}
-
-.btn-primary {
-  background: var(--gold2);
-  color: #fff8e8;
-  border: none;
-  border-radius: 12px;
-  padding: 16px;
-  font-family: 'Noto Serif JP', serif;
-  font-size: 16px;
-  letter-spacing: 0.1em;
-  cursor: pointer;
-  width: 100%;
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  transition: background 0.15s, transform 0.1s;
-  -webkit-appearance: none;
-}
-.btn-primary:active { background: #a07c1e; transform: scale(0.98); }
-
-.btn-green {
-  background: var(--green);
-  color: var(--green2);
-  border: 1px solid #2d6b3c;
-  border-radius: 12px;
-  padding: 15px;
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 15px;
-  cursor: pointer;
-  width: 100%;
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  transition: background 0.15s, transform 0.1s;
-  -webkit-appearance: none;
-}
-.btn-green:active { background: #265e36; transform: scale(0.98); }
-.btn-green:disabled { opacity: 0.5; }
-
-.btn-ghost {
-  background: none;
-  color: var(--muted);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 11px;
-  font-size: 13px;
-  cursor: pointer;
-  width: 100%;
-  transition: color 0.15s;
-  -webkit-appearance: none;
-}
-.btn-ghost:active { color: var(--text); }
-
-/* ===== PREVIEW TAB ===== */
-#preview-panel {
-  padding: 16px;
-  padding-bottom: calc(80px + var(--safe-bottom));
-}
-
-/* 領収書スケール表示 */
-#receipt-wrap {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-#receipt {
-  background: #fff;
-  width: 640px;
-  border: 1.5px solid var(--paper-border);
-  padding: 28px 36px 24px;
-  font-family: 'Noto Serif JP', serif;
-  color: var(--ink);
-  position: relative;
-  border-radius: 4px;
-  box-shadow: 0 2px 16px rgba(0,0,0,0.2);
-  transform-origin: top left;
-}
-
-.r-title {
-  text-align: center;
-  font-size: 22px;
-  letter-spacing: 1.2em;
-  font-weight: 700;
-  margin-bottom: 20px;
-  padding-right: 1.2em;
-}
-.r-meta {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 16px;
-}
-.r-addressee {
-  font-size: 15px;
-  font-weight: 700;
-  border-bottom: 2px solid var(--ink);
-  padding-bottom: 2px;
-  display: inline-block;
-}
-.r-date { font-size: 12px; color: #333; text-align: right; line-height: 1.8; }
-
-.r-amount-line {
-  display: flex; align-items: baseline; gap: 10px;
-  border-bottom: 2px solid var(--ink);
-  padding-bottom: 5px; margin-bottom: 4px;
-}
-.r-yen { font-size: 18px; font-weight: 700; }
-.r-num { font-size: 30px; font-weight: 700; flex: 1; }
-.r-tax-label { font-size: 12px; color: #555; align-self: flex-end; margin-bottom: 3px; }
-.r-tadashi-text { font-size: 12px; color: #555; }
-.r-confirm { font-size: 12px; margin: 12px 0 8px; }
-
-.r-bottom { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
-.r-breakdown { border-collapse: collapse; font-size: 11px; flex: 1; }
-.r-breakdown td { padding: 3px 8px 3px 0; border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; }
-.r-breakdown td:last-child { text-align: left; padding-left: 8px; }
-
-.r-issuer { text-align: right; font-size: 11px; line-height: 1.9; position: relative; }
-.r-shop-name { font-size: 17px; font-weight: 700; display: block; margin-bottom: 2px; }
-.r-seal-img {
-  position: absolute; right: -8px; top: -18px;
-  width: 95px; height: 95px; object-fit: contain; opacity: 0.9;
-}
-
-/* プレビュー内スケール調整（JS で動的に設定） */
-#receipt-scale-wrap {
-  width: 100%;
-  overflow: hidden;
-}
-
-/* ===== BOTTOM NAV（固定フッター） ===== */
-#bottom-actions {
-  position: fixed;
-  bottom: 0; left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  max-width: 520px;
-  padding: 10px 16px;
-  padding-bottom: calc(10px + var(--safe-bottom));
-  background: rgba(26,23,16,0.95);
-  backdrop-filter: blur(12px);
-  border-top: 1px solid var(--border);
-  display: flex;
-  gap: 10px;
-  z-index: 200;
-}
-#bottom-actions .btn-primary { font-size: 14px; padding: 13px; }
-#bottom-actions .btn-green   { font-size: 14px; padding: 12px; }
-
-/* ===== MODAL ===== */
-.modal-overlay {
-  display: none;
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.65);
-  z-index: 500;
-  align-items: flex-end;
-  justify-content: center;
-}
-.modal-overlay.open { display: flex; }
-
-.modal-sheet {
-  background: var(--card);
-  border-radius: 20px 20px 0 0;
-  padding: 20px 20px;
-  padding-bottom: calc(20px + var(--safe-bottom));
-  width: 100%;
-  max-width: 520px;
-  max-height: 85vh;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  animation: slideUp 0.25s ease;
-}
-@keyframes slideUp {
-  from { transform: translateY(60px); opacity: 0; }
-  to   { transform: translateY(0);    opacity: 1; }
-}
-
-.modal-handle {
-  width: 36px; height: 4px;
-  background: var(--border);
-  border-radius: 2px;
-  margin: 0 auto 4px;
-}
-.modal-title {
-  font-family: 'Noto Serif JP', serif;
-  font-size: 16px;
-  color: var(--gold);
-  text-align: center;
-}
-.modal-desc {
-  font-size: 12px;
-  color: var(--muted);
-  line-height: 1.7;
-  background: var(--surface);
-  border-radius: 8px;
-  padding: 12px 14px;
-}
-.modal-field { display: flex; flex-direction: column; gap: 6px; }
-.modal-field label { font-size: 11px; color: var(--muted); letter-spacing: 0.1em; }
-.modal-field input {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--text);
-  border-radius: 8px;
-  padding: 12px 14px;
-  font-size: 14px;
-  font-family: 'Noto Sans JP', sans-serif;
-  outline: none;
-  width: 100%;
-}
-.modal-field input:focus { border-color: var(--gold); }
-.modal-actions { display: flex; gap: 10px; }
-.modal-actions button { flex: 1; }
-
-/* ===== TOAST ===== */
-#toast {
-  position: fixed;
-  bottom: calc(80px + var(--safe-bottom));
-  left: 50%; transform: translateX(-50%) translateY(12px);
-  background: #1a3d24;
-  color: var(--green2);
-  padding: 10px 22px;
-  border-radius: 24px;
-  font-size: 13px;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.25s, transform 0.25s;
-  z-index: 9999;
-  white-space: nowrap;
-  border: 1px solid #2d6b3c;
-}
-#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-#toast.error { background: #3d1a1a; color: var(--red2); border-color: #6b2d2d; }
-
-/* ===== PRINT ===== */
-@media print {
-  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-
-  /* UI要素をすべて非表示 */
-  #topbar, #tabbar, #bottom-actions, #toast,
-  .modal-overlay, #form-panel, #action-panel { display: none !important; }
-
-  /* 背景・ボディ：真っ白 */
-  html, body {
-    background: #ffffff !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    height: auto !important;
+  /* 文字数カウンター */
+  .textarea-wrap { position: relative; }
+  .char-counter {
+    text-align: right; font-size: 11px; margin-top: 4px;
+    color: var(--gray); transition: color 0.2s;
+  }
+  .char-counter.warn { color: #f59e0b; font-weight: 700; }
+  .char-counter.over { color: #ef4444; font-weight: 700; }
+  .char-bar {
+    height: 3px; border-radius: 2px; background: var(--border);
+    margin-top: 3px; overflow: hidden;
+  }
+  .char-bar-fill {
+    height: 100%; border-radius: 2px;
+    background: var(--blue); transition: width 0.2s, background 0.2s;
   }
 
-  /* アプリシェルをリセット */
-  #app {
-    max-width: none !important;
-    height: auto !important;
-    background: #ffffff !important;
-    display: block !important;
+  /* 参加者グリッド */
+  .participant-group-label {
+    font-size: 12px; font-weight: 700; color: var(--blue);
+    background: var(--blue-light); padding: 5px 10px; border-radius: 6px;
+    margin-bottom: 8px; margin-top: 4px;
   }
-
-  #content {
-    overflow: visible !important;
-    background: #ffffff !important;
+  .participant-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;
   }
-
-  /* すべてのタブパネルを表示状態に（印刷時は全描画が必要） */
-  .tab-panel { display: block !important; }
-
-  /* 入力フォームパネルは非表示 */
-  #tab-form { display: none !important; }
-
-  /* プレビューパネル：A4中央配置 */
-  #preview-panel {
-    padding: 0 !important;
-    background: #ffffff !important;
-    display: block !important;
+  .participant-item { display: flex; flex-direction: column; gap: 3px; }
+  .participant-item label { font-size: 11px; }
+  .participant-item input {
+    padding: 6px 8px; font-size: 13px; text-align: center;
   }
-
-  #receipt-scale-wrap {
-    overflow: visible !important;
-    width: auto !important;
-    height: auto !important;
+  .participant-total {
+    background: var(--blue-light); border-radius: 6px; padding: 8px 12px;
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 4px;
   }
+  .participant-total span { font-size: 13px; color: var(--blue); font-weight: 700; }
 
-  /* 領収書本体：A4幅に合わせて中央配置・真っ白余白 */
-  #receipt {
-    width: 190mm !important;
-    margin: 10mm auto 0 !important;
-    transform: none !important;
-    box-shadow: none !important;
-    border: 1px solid #bbb !important;
-    border-radius: 0 !important;
-    page-break-inside: avoid !important;
-    background: #ffffff !important;
+  /* 写真 */
+  .photo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .photo-slot {
+    position: relative; background: var(--blue-light); border: 2px dashed var(--blue-mid);
+    border-radius: 8px; aspect-ratio: 4/3; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; overflow: hidden;
   }
+  .photo-slot:hover { border-color: var(--blue); background: #dbeafe; }
+  .photo-slot img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 6px; }
+  .photo-slot .photo-label-overlay {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: rgba(0,0,0,0.5); color: white; font-size: 11px; padding: 4px 6px; display: none;
+  }
+  .photo-slot.has-img .photo-label-overlay { display: block; }
+  .photo-slot .placeholder-text { font-size: 11px; color: var(--blue); text-align: center; }
+  .photo-slot .placeholder-icon { font-size: 28px; margin-bottom: 4px; }
+  .photo-caption { margin-top: 6px; display: flex; gap: 6px; align-items: center; }
+  .photo-caption input { flex: 1; font-size: 12px; padding: 5px 8px; }
+  .remove-photo {
+    background: #ef4444; color: white; border: none; border-radius: 4px;
+    width: 24px; height: 24px; font-size: 14px; cursor: pointer;
+    display: none; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  input[type="file"] { display: none; }
 
-  /* 印鑑は印刷でも25mm固定 */
-  .r-seal-img {
-    width: 95px !important;
-    height: 95px !important;
+  /* ボタン */
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 20px; border-radius: 8px; font-size: 14px; font-family: 'Noto Sans JP', sans-serif; font-weight: 500; cursor: pointer; border: none; transition: all 0.2s; }
+  .btn-primary { background: var(--blue); color: white; width: 100%; padding: 14px; font-size: 15px; border-radius: 10px; box-shadow: 0 2px 8px rgba(37,99,168,0.3); }
+  .btn-primary:hover { background: var(--accent); transform: translateY(-1px); }
+  .btn-outline { background: white; color: var(--blue); border: 1.5px solid var(--blue); }
+  .btn-outline:hover { background: var(--blue-light); }
+  .btn-sheet { background: #059669; color: white; width: 100%; padding: 12px; font-size: 14px; border-radius: 10px; box-shadow: 0 2px 8px rgba(5,150,105,0.3); border: none; font-family: 'Noto Sans JP', sans-serif; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .btn-sheet:hover { background: #047857; }
+  .btn-sheet:disabled { background: #9ca3af; box-shadow: none; cursor: not-allowed; }
+
+  /* プレビュー */
+  .preview-container { background: white; border-radius: 10px; padding: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.12); }
+  .preview-title { font-family: 'Noto Serif JP', serif; font-size: 20px; font-weight: 700; text-align: center; margin-bottom: 16px; letter-spacing: 0.1em; }
+  .pv-section { margin-bottom: 14px; }
+  .pv-header { background: var(--blue); color: white; padding: 5px 10px; font-size: 12px; font-weight: 700; margin-bottom: 8px; border-radius: 4px 4px 0 0; }
+  .pv-header::before { content: '■ '; font-size: 9px; }
+  .pv-body { border: 1px solid var(--border); border-top: none; padding: 10px; font-size: 12px; line-height: 1.7; border-radius: 0 0 4px 4px; }
+  .pv-field { margin-bottom: 4px; }
+  .pv-label { font-size: 10px; color: var(--gray); margin-bottom: 2px; }
+  .pv-value { font-size: 12px; min-height: 18px; border-bottom: 1px solid var(--border); padding-bottom: 2px; }
+  .pv-text { white-space: pre-wrap; min-height: 30px; }
+  .pv-photos { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .pv-photo img { width: 100%; aspect-ratio: 4/3; object-fit: cover; border: 1px solid var(--border); border-radius: 4px; }
+  .pv-photo-cap { font-size: 10px; color: var(--gray); text-align: center; margin-top: 2px; }
+
+  /* トースト */
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: #1f2937; color: white; padding: 10px 20px; border-radius: 20px; font-size: 13px; z-index: 1000; transition: transform 0.3s ease; white-space: nowrap; }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ===== 印刷用 A4 ===== */
+  #print-area { display: none; }
+
+  @media print {
+    @page { size: A4; margin: 10mm 12mm 8mm; }
+    body > #app { display: none !important; }
+    #print-area {
+      display: block !important;
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: 8.5pt;
+      color: #000;
+      line-height: 1.4;
+    }
+
+    .pr-title {
+      text-align: center;
+      font-family: 'Noto Serif JP', serif;
+      font-size: 15pt;
+      font-weight: 700;
+      margin-bottom: 4mm;
+      letter-spacing: 0.1em;
+    }
+
+    .pr-section { margin-bottom: 3mm; page-break-inside: avoid; }
+
+    .pr-section-header {
+      background: #2563a8 !important;
+      color: white !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+      padding: 2px 7px;
+      font-size: 8.5pt;
+      font-weight: 700;
+      margin-bottom: 1.5mm;
+    }
+    .pr-section-header::before { content: '■ '; }
+
+    .pr-table { width: 100%; border-collapse: collapse; font-size: 8pt; }
+    .pr-table td { padding: 2px 5px; border: 0.4pt solid #bbb; vertical-align: middle; }
+    .pr-label-cell { color: #555; white-space: nowrap; background: #f5f7fa !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; width: 14mm; font-weight: 500; }
+
+    .pr-text-box {
+      border: 0.4pt solid #bbb;
+      padding: 2mm 3mm;
+      white-space: pre-wrap;
+      font-size: 8pt;
+      line-height: 1.5;
+    }
+    .pr-small-label { font-size: 7.5pt; color: #555; margin-bottom: 0.5mm; font-weight: 500; }
+
+    /* 参加者テーブル */
+    .pr-pax-table { width: 100%; border-collapse: collapse; font-size: 7.5pt; }
+    .pr-pax-table td { padding: 2px 4px; border: 0.4pt solid #bbb; text-align: center; }
+    .pr-pax-table .pr-pax-group { background: #dbeafe !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; font-weight: 700; color: #1e40af; }
+    .pr-pax-table .pr-pax-label { background: #f5f7fa !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; font-size: 7pt; color: #444; }
+    .pr-pax-table .pr-pax-total { background: #eff6ff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; font-weight: 700; color: #1e40af; }
+
+    /* 写真 */
+    .pr-photo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; }
+    .pr-photo-item img { width: 100%; max-height: 52mm; object-fit: cover; border: 0.4pt solid #bbb; display: block; }
+    .pr-photo-item .no-photo { width: 100%; height: 45mm; border: 0.4pt solid #ccc; display: flex; align-items: center; justify-content: center; color: #bbb; font-size: 7.5pt; }
+    .pr-photo-caption { font-size: 7pt; color: #555; margin-top: 0.5mm; border-top: 0.3pt solid #eee; padding-top: 0.5mm; }
+
+    .pr-footer { margin-top: 3mm; border-top: 0.4pt solid #ccc; padding-top: 2mm; font-size: 7pt; color: #999; display: flex; justify-content: space-between; }
   }
-}
 </style>
 </head>
 <body>
 <div id="app">
+  <header>
+    <h1>📋 活動日報</h1>
+    <div style="display:flex;gap:8px;">
+      <button class="header-btn" onclick="switchView('edit')" id="btn-edit">編集</button>
+      <button class="header-btn" onclick="switchView('preview')" id="btn-preview">プレビュー</button>
+      <button class="header-btn primary" onclick="generatePDF()">📄 PDF</button>
+    </div>
+  </header>
 
-  <!-- TOP BAR -->
-  <div id="topbar">
-    <h1>領　収　書</h1>
-    <button id="btn-settings" onclick="openModal('gas-modal')" title="設定">⚙</button>
+  <div class="tab-bar">
+    <div class="tab active" onclick="switchTab(0)" id="tab0"><span class="tab-icon">📄</span>基本情報</div>
+    <div class="tab" onclick="switchTab(1)" id="tab1"><span class="tab-icon">✏️</span>活動記録</div>
+    <div class="tab" onclick="switchTab(2)" id="tab2"><span class="tab-icon">📷</span>写真記録</div>
   </div>
 
-  <!-- TAB BAR -->
-  <div id="tabbar">
-    <button class="tab-btn active" onclick="switchTab('form')">✏️ 入力</button>
-    <button class="tab-btn" onclick="switchTab('preview')">👁 プレビュー</button>
-  </div>
+  <main>
+    <div id="edit-view">
 
-  <!-- CONTENT -->
-  <div id="content">
-
-    <!-- 入力タブ -->
-    <div id="tab-form" class="tab-panel active">
-      <div id="form-panel">
-
-        <!-- 領収書情報 -->
-        <div class="form-section">
-          <div class="form-section-title">領収書情報</div>
-
-          <div class="field">
-            <label>宛名</label>
-            <input type="text" id="f-addressee" placeholder="〇〇" inputmode="text" autocomplete="off">
-          </div>
-
-          <div class="field">
-            <label>発行日</label>
-            <input type="date" id="f-date">
-          </div>
-
-          <div class="field">
-            <label>金額（税込）</label>
-            <input type="number" id="f-amount" placeholder="18700" inputmode="numeric">
-          </div>
-
-          <div class="field">
-            <label>消費税率</label>
-            <select id="f-taxrate">
-              <option value="10">10%</option>
-              <option value="8">8%（軽減）</option>
-              <option value="0">非課税</option>
-            </select>
-          </div>
-
-          <div class="field field-textarea">
-            <label>但書</label>
-            <textarea id="f-tadashi" placeholder="例：5月23日 なつつばき ご利用分" rows="2"></textarea>
-          </div>
-        </div>
-
-        <!-- 発行者情報 -->
-        <div class="form-section">
-          <div class="form-section-title">発行者情報</div>
-
-          <div class="field">
-            <label>屋号</label>
-            <input type="text" id="f-shopname" placeholder="高仙の里 よの" inputmode="text" autocomplete="off">
-          </div>
-
-          <div class="field field-textarea">
-            <label>住所・TEL</label>
-            <textarea id="f-issuer" placeholder="株式会社 ライフギアプロジェクト&#10;719-3222 岡山県真庭市余野下465&#10;TEL 0867-42-6336" rows="3"></textarea>
-          </div>
-
-          <div class="field seal-row">
-            <label>印鑑</label>
-            <div class="seal-trigger">
-              <div class="seal-thumb" id="seal-thumb">
-                <span id="seal-icon">🔵</span>
-                <img id="seal-preview" src="" alt="" style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;">
-                <input type="file" id="f-seal" accept="image/*">
+      <!-- TAB 0: 基本情報 -->
+      <div id="section-tab0">
+        <div class="section-card">
+          <div class="section-header">基本情報</div>
+          <div class="section-body">
+            <div class="form-row">
+              <div class="form-group" style="flex:2">
+                <label>日付</label>
+                <input type="date" id="f-date">
               </div>
-              <div class="seal-info" id="seal-info">タップして印鑑画像を選択<br><span style="font-size:11px;">PNG推奨・localStorage保存</span></div>
-              <button class="seal-clear" id="seal-clear-btn" onclick="clearSeal()" style="display:none;">削除</button>
+              <div class="form-group" style="flex:0.7">
+                <label>曜日</label>
+                <input type="text" id="f-day" maxlength="1" style="text-align:center;">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>開始時間</label>
+                <input type="time" id="f-time-start">
+              </div>
+              <div class="inline-label" style="margin-top:20px;">〜</div>
+              <div class="form-group">
+                <label>終了時間</label>
+                <input type="time" id="f-time-end">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>記録者</label>
+                <input type="text" id="f-recorder" placeholder="氏名">
+              </div>
+              <div class="form-group">
+                <label>場所</label>
+                <input type="text" id="f-place" placeholder="活動場所">
+              </div>
+              <div class="form-group" style="flex:0.8">
+                <label>天候</label>
+                <select id="f-weather">
+                  <option value="">-</option>
+                  <option>晴れ</option><option>曇り</option><option>雨</option><option>雪</option>
+                </select>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- アクション -->
-        <div id="action-panel">
-          <button class="btn-primary" onclick="printWithTitle()">🖨 印刷・PDF保存</button>
-          <button class="btn-green" id="btn-save-sheet" onclick="saveToSheet()">
-            <span>📊</span><span id="save-btn-text">スプレッドシートに保存</span>
-          </button>
-          <button class="btn-ghost" onclick="openModal('gas-modal')">⚙ スプレッドシート連携設定</button>
-          <button class="btn-ghost" onclick="clearAll()" style="color:#6a4040;border-color:#4a3030;">リセット</button>
-        </div>
-      </div>
-    </div>
+        <!-- 参加者 -->
+        <div class="section-card">
+          <div class="section-header">参加者</div>
+          <div class="section-body">
+            <div class="participant-group-label">👧 こども</div>
+            <div class="participant-grid">
+              <div class="participant-item">
+                <label>未就学児</label>
+                <input type="number" id="p-preschool" min="0" placeholder="0" oninput="calcTotal()">
+              </div>
+              <div class="participant-item">
+                <label>小学生</label>
+                <input type="number" id="p-elementary" min="0" placeholder="0" oninput="calcTotal()">
+              </div>
+              <div class="participant-item">
+                <label>中学生</label>
+                <input type="number" id="p-junior" min="0" placeholder="0" oninput="calcTotal()">
+              </div>
+              <div class="participant-item">
+                <label>高校生</label>
+                <input type="number" id="p-senior" min="0" placeholder="0" oninput="calcTotal()">
+              </div>
+            </div>
 
-    <!-- プレビュータブ -->
-    <div id="tab-preview" class="tab-panel">
-      <div id="preview-panel">
-        <div id="receipt-scale-wrap">
-          <div id="receipt-wrap">
-            <div id="receipt">
-              <div class="r-title">領　収　書</div>
-              <div class="r-meta">
-                <div class="r-addressee" id="r-addressee">　　　　　　　様</div>
-                <div class="r-date">発行日　<span id="r-date">令和　年　月　日</span></div>
+            <div class="participant-group-label">👨 大人</div>
+            <div class="participant-grid">
+              <div class="participant-item">
+                <label>学校関係</label>
+                <input type="number" id="p-school" min="0" placeholder="0" oninput="calcTotal()">
               </div>
-              <div class="r-amount-line">
-                <span class="r-yen">¥</span>
-                <span class="r-num" id="r-amount">0</span>
-                <span style="font-size:17px;">－</span>
-                <span class="r-tax-label">（税込）</span>
+              <div class="participant-item">
+                <label>地域住民</label>
+                <input type="number" id="p-community" min="0" placeholder="0" oninput="calcTotal()">
               </div>
-              <div class="r-tadashi-text">但</div>
-              <div class="r-confirm">上記正に領収いたしました。</div>
-              <div class="r-bottom">
-                <table class="r-breakdown">
-                  <tr><td>内訳</td><td id="r-tadashi">　</td></tr>
-                  <tr><td>税抜金額</td><td id="r-taxbase">　</td></tr>
-                  <tr><td>消費税額等</td><td id="r-taxamt">　</td></tr>
-                </table>
-                <div class="r-issuer">
-                  <span class="r-shop-name" id="r-shopname">　</span>
-                  <div id="r-issuer-text" style="white-space:pre-line;font-family:'Noto Sans JP',sans-serif;font-size:11px;">　</div>
-                  <img id="r-seal" class="r-seal-img" src="" style="display:none;" alt="">
+              <div class="participant-item">
+                <label>大学生</label>
+                <input type="number" id="p-univ" min="0" placeholder="0" oninput="calcTotal()">
+              </div>
+              <div class="participant-item">
+                <label>その他</label>
+                <input type="number" id="p-other" min="0" placeholder="0" oninput="calcTotal()">
+              </div>
+            </div>
+
+            <div class="participant-total">
+              <span id="total-display">合計 0名　｜　こども 0名　大人 0名</span>
+            </div>
+
+            <!-- スプレッドシート送信ボタン -->
+            <div style="margin-top:12px;">
+              <button class="btn btn-sheet" onclick="saveToSheet()" id="btn-save-sheet">
+                📊 スプレッドシートに記録
+              </button>
+              <div id="sheet-status" style="margin-top:6px;font-size:11px;text-align:center;color:var(--gray);min-height:16px;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- GAS URL設定カード -->
+        <div class="section-card" id="gas-setting-card">
+          <div class="section-header">スプレッドシート連携設定</div>
+          <div class="section-body">
+            <div class="form-group">
+              <label>GAS WebアプリのURL <span style="color:#ef4444;">※初回のみ設定</span></label>
+              <input type="text" id="gas-url" placeholder="https://script.google.com/macros/s/..." style="font-size:12px;">
+            </div>
+            <button class="btn btn-outline" onclick="saveGasUrl()" style="width:100%;margin-top:8px;padding:8px;">
+              URLを保存する
+            </button>
+            <div style="margin-top:10px;padding:10px;background:var(--blue-light);border-radius:6px;font-size:11px;line-height:1.8;color:#1e40af;">
+              設定方法：<br>
+              ① Googleスプレッドシートを新規作成<br>
+              ② 拡張機能 → Apps Script → gas_code.js の内容を貼り付け<br>
+              ③ SPREADSHEET_ID を入力して保存<br>
+              ④ デプロイ → 新しいデプロイ → ウェブアプリ<br>
+              ⑤ アクセス：「全員」に設定してデプロイ<br>
+              ⑥ 表示されたURLをここに貼り付けて保存
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /section-tab0 -->
+
+      <!-- TAB 1: 活動記録 -->
+      <div id="section-tab1" style="display:none;">
+        <div class="section-card">
+          <div class="section-header">活動の記録</div>
+          <div class="section-body">
+            <div class="form-group" style="margin-bottom:14px;">
+              <label>【実施内容】<span style="color:var(--gray);font-weight:400;">（300字以内）</span></label>
+              <div class="textarea-wrap">
+                <textarea id="f-content" rows="7" maxlength="300" placeholder="実施した活動内容を詳しく記録してください" oninput="updateCounter('f-content','cnt-content',300)"></textarea>
+                <div class="char-counter" id="cnt-content">0 / 300 文字</div>
+                <div class="char-bar"><div class="char-bar-fill" id="bar-content" style="width:0%"></div></div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>【所感・気づき・課題】<span style="color:var(--gray);font-weight:400;">（200字以内）</span></label>
+              <div class="textarea-wrap">
+                <textarea id="f-impression" rows="5" maxlength="200" placeholder="感じたこと、気づいたこと、今後の課題など" oninput="updateCounter('f-impression','cnt-impression',200)"></textarea>
+                <div class="char-counter" id="cnt-impression">0 / 200 文字</div>
+                <div class="char-bar"><div class="char-bar-fill" id="bar-impression" style="width:0%"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="switchView('preview')" style="margin-bottom:20px;">
+          👁 プレビューを確認する
+        </button>
+      </div>
+
+      <!-- TAB 2: 写真記録 -->
+      <div id="section-tab2" style="display:none;">
+        <div class="section-card">
+          <div class="section-header">写真記録</div>
+          <div class="section-body">
+            <div class="photo-grid">
+              <div>
+                <div class="photo-slot" id="slot0" onclick="document.getElementById('file0').click()">
+                  <span class="placeholder-icon">📷</span><span class="placeholder-text">写真を添付</span>
+                  <div class="photo-label-overlay" id="overlay0"></div>
+                </div>
+                <input type="file" id="file0" accept="image/*" onchange="handlePhoto(0,this)">
+                <div class="photo-caption">
+                  <input type="text" id="cap0" placeholder="キャプション">
+                  <button class="remove-photo" id="rm0" onclick="removePhoto(0)">✕</button>
+                </div>
+              </div>
+              <div>
+                <div class="photo-slot" id="slot1" onclick="document.getElementById('file1').click()">
+                  <span class="placeholder-icon">📷</span><span class="placeholder-text">写真を添付</span>
+                  <div class="photo-label-overlay" id="overlay1"></div>
+                </div>
+                <input type="file" id="file1" accept="image/*" onchange="handlePhoto(1,this)">
+                <div class="photo-caption">
+                  <input type="text" id="cap1" placeholder="キャプション">
+                  <button class="remove-photo" id="rm1" onclick="removePhoto(1)">✕</button>
                 </div>
               </div>
             </div>
           </div>
         </div>
+        <button class="btn btn-primary" onclick="generatePDF()" style="margin-bottom:20px;">
+          📄 PDFを作成・保存
+        </button>
+      </div>
+
+    </div><!-- /edit-view -->
+
+    <!-- PREVIEW VIEW -->
+    <div id="preview-view" style="display:none;">
+      <div class="preview-container" id="preview-content"></div>
+      <div style="margin-top:16px;display:flex;gap:10px;">
+        <button class="btn btn-outline" onclick="switchView('edit')" style="flex:1;">← 編集に戻る</button>
+        <button class="btn btn-primary" onclick="generatePDF()" style="flex:1;">📄 PDFを保存</button>
       </div>
     </div>
-
-  </div><!-- /content -->
-
-  <!-- BOTTOM ACTIONS（プレビュータブ時のみ表示） -->
-  <div id="bottom-actions" style="display:none;">
-    <button class="btn-primary" onclick="printWithTitle()" style="flex:1;">🖨 印刷・PDF</button>
-    <button class="btn-green" onclick="saveToSheet()" style="flex:1;">📊 シートに保存</button>
-  </div>
-
-</div><!-- /app -->
-
-<!-- GAS設定 モーダル -->
-<div class="modal-overlay" id="gas-modal" onclick="bgClose(event,'gas-modal')">
-  <div class="modal-sheet">
-    <div class="modal-handle"></div>
-    <div class="modal-title">📊 スプレッドシート連携</div>
-    <div class="modal-desc">
-      Google Apps Script（GAS）のWebアプリURLを入力してください。<br>
-      GASスクリプトは同梱の <strong>gas_script.gs</strong> を使用します。<br><br>
-      デプロイ手順：<br>
-      スクリプトエディタ → デプロイ → 新しいデプロイ<br>
-      → 種類：ウェブアプリ → アクセス：全員 → デプロイ
-    </div>
-    <div class="modal-field">
-      <label>GAS WebアプリURL</label>
-      <input type="url" id="modal-gas-url" placeholder="https://script.google.com/macros/s/.../exec" inputmode="url">
-    </div>
-    <div class="modal-actions">
-      <button class="btn-ghost" onclick="closeModal('gas-modal')">キャンセル</button>
-      <button class="btn-primary" onclick="saveGasUrl()" style="border-radius:10px;font-size:14px;padding:12px;">保存</button>
-    </div>
-  </div>
+  </main>
 </div>
 
-<!-- Toast -->
-<div id="toast"></div>
+<div id="print-area"></div>
+<div class="toast" id="toast"></div>
 
 <script>
-// ===== 印刷（ファイル名を宛名から生成） =====
-function printWithTitle() {
-  const addressee = document.getElementById('f-addressee').value.trim();
-  const filename = addressee ? `領収書_${addressee}様` : '領収書';
-  const prev = document.title;
-  document.title = filename;
-  window.print();
-  // 印刷ダイアログが閉じた後にタイトルを戻す
-  setTimeout(() => { document.title = prev; }, 2000);
-}
+let photos = [null,null];
+let currentTab = 0;
 
-// ===== タブ =====
-let currentTab = 'form';
-function switchTab(tab) {
-  currentTab = tab;
-  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('tab-' + tab).classList.add('active');
-  document.querySelectorAll('.tab-btn')[tab === 'form' ? 0 : 1].classList.add('active');
-  document.getElementById('bottom-actions').style.display = tab === 'preview' ? 'flex' : 'none';
-  if (tab === 'preview') { scaleReceipt(); updateReceipt(); }
-}
-
-// ===== 領収書スケール =====
-function scaleReceipt() {
-  const wrap = document.getElementById('receipt-scale-wrap');
-  const receipt = document.getElementById('receipt');
-  const w = wrap.clientWidth - 32;
-  const scale = Math.min(1, w / 640);
-  receipt.style.transform = `scale(${scale})`;
-  receipt.style.transformOrigin = 'top left';
-  wrap.style.height = (receipt.offsetHeight * scale + 8) + 'px';
-}
-window.addEventListener('resize', scaleReceipt);
-
-// ===== ユーティリティ =====
-function toReiwa(dateStr) {
-  if (!dateStr) return '令和　年　月　日';
-  const d = new Date(dateStr + 'T00:00:00');
-  return `令和${d.getFullYear()-2018}年${d.getMonth()+1}月${d.getDate()}日`;
-}
-function fmt(n) { return Number(n).toLocaleString('ja-JP'); }
-function calcTax(total, rate) {
-  const base = Math.floor(total / (1 + rate / 100));
-  return { base, tax: total - base };
-}
-
-// ===== Toast =====
-function showToast(msg, isError = false) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'show' + (isError ? ' error' : '');
-  clearTimeout(t._t);
-  t._t = setTimeout(() => t.className = '', 3000);
-}
-
-// ===== Storage =====
-const SK = 'receipt_v2', SEAL_K = 'receipt_seal_v1', GAS_K = 'receipt_gas_url_v1';
-
-function saveForm() {
-  localStorage.setItem(SK, JSON.stringify({
-    addressee: v('f-addressee'), date: v('f-date'), amount: v('f-amount'),
-    taxrate: v('f-taxrate'), tadashi: v('f-tadashi'),
-    shopname: v('f-shopname'), issuer: v('f-issuer'),
-  }));
-}
-function loadForm() {
-  try {
-    const d = JSON.parse(localStorage.getItem(SK) || 'null');
-    if (!d) return;
-    sv('f-addressee', d.addressee); sv('f-date', d.date); sv('f-amount', d.amount);
-    sv('f-taxrate', d.taxrate || '10'); sv('f-tadashi', d.tadashi);
-    sv('f-shopname', d.shopname); sv('f-issuer', d.issuer);
-  } catch(e) {}
-}
-function v(id)  { return document.getElementById(id).value; }
-function sv(id, val) { if (val != null) document.getElementById(id).value = val; }
-
-// ===== Modal =====
-function openModal(id) {
-  if (id === 'gas-modal') {
-    document.getElementById('modal-gas-url').value = localStorage.getItem(GAS_K) || '';
-  }
-  document.getElementById(id).classList.add('open');
-}
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-function bgClose(e, id) { if (e.target === e.currentTarget) closeModal(id); }
-
-function saveGasUrl() {
-  const url = document.getElementById('modal-gas-url').value.trim();
-  if (url) { localStorage.setItem(GAS_K, url); showToast('✓ URL を保存しました'); }
-  else { localStorage.removeItem(GAS_K); showToast('URLをクリアしました'); }
-  closeModal('gas-modal');
-}
-
-// ===== 印鑑 =====
-let sealUrl = null;
-function applySeal(url) {
-  sealUrl = url;
-  const img = document.getElementById('seal-preview');
-  img.src = url; img.style.display = '';
-  document.getElementById('seal-icon').style.display = 'none';
-  document.getElementById('seal-info').textContent = '印鑑設定済み';
-  document.getElementById('seal-clear-btn').style.display = '';
-  document.getElementById('r-seal').src = url;
-  document.getElementById('r-seal').style.display = '';
-  try { localStorage.setItem(SEAL_K, url); } catch(e) {}
-}
-function clearSeal() {
-  sealUrl = null;
-  document.getElementById('seal-preview').style.display = 'none';
-  document.getElementById('seal-icon').style.display = '';
-  document.getElementById('seal-info').innerHTML = 'タップして印鑑画像を選択<br><span style="font-size:11px;">PNG推奨・localStorage保存</span>';
-  document.getElementById('seal-clear-btn').style.display = 'none';
-  document.getElementById('f-seal').value = '';
-  document.getElementById('r-seal').style.display = 'none';
-  localStorage.removeItem(SEAL_K);
-}
-document.getElementById('f-seal').addEventListener('change', function(e) {
-  const f = e.target.files[0]; if (!f) return;
-  const r = new FileReader();
-  r.onload = ev => applySeal(ev.target.result);
-  r.readAsDataURL(f);
+// 起動時に今日の日付
+window.addEventListener('load', () => {
+  const today = new Date();
+  document.getElementById('f-date').value = today.toISOString().split('T')[0];
+  updateDay();
+  document.getElementById('f-date').addEventListener('change', updateDay);
+  loadGasUrl();
 });
 
-// ===== リセット =====
-function clearAll() {
-  if (!confirm('すべてリセットしますか？')) return;
-  ['f-addressee','f-amount','f-tadashi','f-shopname','f-issuer'].forEach(id => sv(id,''));
-  sv('f-taxrate','10');
-  sv('f-date', new Date().toISOString().split('T')[0]);
-  localStorage.removeItem(SK);
-  updateReceipt();
+function updateDay() {
+  const d = new Date(document.getElementById('f-date').value + 'T00:00:00');
+  document.getElementById('f-day').value = ['日','月','火','水','木','金','土'][d.getDay()];
 }
 
-// ===== 領収書更新 =====
-function getFormData() {
-  const amount = parseInt(v('f-amount')) || 0;
-  const taxrate = parseInt(v('f-taxrate')) || 0;
+// 文字数カウンター
+function updateCounter(fieldId, counterId, max) {
+  const val = document.getElementById(fieldId).value;
+  const len = val.length;
+  const pct = Math.min(len / max * 100, 100);
+  const counter = document.getElementById(counterId);
+  const bar = document.getElementById('bar-' + fieldId.replace('f-',''));
+  counter.textContent = `${len} / ${max} 文字`;
+  counter.className = 'char-counter' + (len >= max ? ' over' : len >= max * 0.8 ? ' warn' : '');
+  if (bar) {
+    bar.style.width = pct + '%';
+    bar.style.background = len >= max ? '#ef4444' : len >= max * 0.8 ? '#f59e0b' : '#2563a8';
+  }
+}
+
+// 参加者合計
+function calcTotal() {
+  const ids = ['p-preschool','p-elementary','p-junior','p-senior','p-school','p-community','p-univ','p-other'];
+  const pax = getPaxValues();
+  document.getElementById('total-display').textContent =
+    `合計 ${pax.total}名　｜　こども ${pax.kids}名　大人 ${pax.adults}名`;
+}
+
+function getPaxValues() {
   return {
-    addressee: v('f-addressee').trim(),
-    dateStr:   v('f-date'),
-    amount, taxrate,
-    tadashi:  v('f-tadashi').trim(),
-    shopname: v('f-shopname').trim(),
-    issuer:   v('f-issuer').trim(),
+    preschool: parseInt(document.getElementById('p-preschool').value)||0,
+    elementary: parseInt(document.getElementById('p-elementary').value)||0,
+    junior: parseInt(document.getElementById('p-junior').value)||0,
+    senior: parseInt(document.getElementById('p-senior').value)||0,
+    school: parseInt(document.getElementById('p-school').value)||0,
+    community: parseInt(document.getElementById('p-community').value)||0,
+    univ: parseInt(document.getElementById('p-univ').value)||0,
+    other: parseInt(document.getElementById('p-other').value)||0,
+    get total() { return this.preschool+this.elementary+this.junior+this.senior+this.school+this.community+this.univ+this.other; },
+    get kids() { return this.preschool+this.elementary+this.junior+this.senior; },
+    get adults() { return this.school+this.community+this.univ+this.other; }
   };
 }
 
-function updateReceipt() {
-  const { addressee, dateStr, amount, taxrate, tadashi, shopname, issuer } = getFormData();
-  document.getElementById('r-addressee').textContent = (addressee || '　　　　　　') + '　様';
-  document.getElementById('r-date').textContent = toReiwa(dateStr);
-  document.getElementById('r-amount').textContent = fmt(amount);
-  document.getElementById('r-tadashi').textContent = tadashi || '　';
-  if (amount > 0 && taxrate > 0) {
-    const { base, tax } = calcTax(amount, taxrate);
-    document.getElementById('r-taxbase').textContent = `${taxrate}% 対象　¥${fmt(base)}`;
-    document.getElementById('r-taxamt').textContent = `${taxrate}%　¥${fmt(tax)}`;
-  } else if (taxrate === 0) {
-    document.getElementById('r-taxbase').textContent = '非課税';
-    document.getElementById('r-taxamt').textContent = '－';
-  } else {
-    document.getElementById('r-taxbase').textContent = '　';
-    document.getElementById('r-taxamt').textContent = '　';
+// タブ
+function switchTab(n) {
+  for (let i=0;i<3;i++) {
+    document.getElementById(`tab${i}`).classList.toggle('active', i===n);
+    document.getElementById(`section-tab${i}`).style.display = i===n ? '' : 'none';
   }
-  document.getElementById('r-shopname').textContent = shopname || '　';
-  document.getElementById('r-issuer-text').textContent = issuer || '　';
-  saveForm();
+  currentTab = n;
 }
 
-// ===== スプレッドシート保存 =====
-async function saveToSheet() {
-  const gasUrl = localStorage.getItem(GAS_K) || '';
-  if (!gasUrl) { openModal('gas-modal'); showToast('まずGAS URLを設定してください', true); return; }
-  const { addressee, dateStr, amount, taxrate, tadashi, shopname, issuer } = getFormData();
-  if (!addressee || !dateStr || !amount) { showToast('宛名・発行日・金額を入力してください', true); return; }
-  let taxBase = '', taxAmt = '';
-  if (amount > 0 && taxrate > 0) { const r = calcTax(amount, taxrate); taxBase = r.base; taxAmt = r.tax; }
-  const now = new Date();
-  const savedAt = `${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`;
-  const btn = document.getElementById('btn-save-sheet');
-  const btnText = document.getElementById('save-btn-text');
-  btn.disabled = true; if (btnText) btnText.textContent = '送信中…';
+// ビュー
+function switchView(v) {
+  document.getElementById('edit-view').style.display = v==='edit' ? '' : 'none';
+  document.getElementById('preview-view').style.display = v==='preview' ? '' : 'none';
+  document.getElementById('btn-edit').style.fontWeight    = v==='edit'    ? '700' : '400';
+  document.getElementById('btn-preview').style.fontWeight = v==='preview' ? '700' : '400';
+  if (v==='preview') renderPreview();
+}
+
+// 写真
+function handlePhoto(idx, input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    photos[idx] = e.target.result;
+    const slot = document.getElementById(`slot${idx}`);
+    const old = slot.querySelector('img'); if (old) old.remove();
+    const img = document.createElement('img'); img.src = e.target.result; slot.appendChild(img);
+    slot.classList.add('has-img');
+    document.getElementById(`rm${idx}`).style.display = 'flex';
+    document.getElementById(`overlay${idx}`).textContent = file.name;
+  };
+  reader.readAsDataURL(file);
+}
+function removePhoto(idx) {
+  photos[idx] = null;
+  const slot = document.getElementById(`slot${idx}`);
+  const img = slot.querySelector('img'); if (img) img.remove();
+  slot.classList.remove('has-img');
+  document.getElementById(`rm${idx}`).style.display = 'none';
+  document.getElementById(`file${idx}`).value = '';
+  document.getElementById(`overlay${idx}`).textContent = '';
+}
+
+// プレビュー
+function renderPreview() {
+  const date = document.getElementById('f-date').value;
+  const day = document.getElementById('f-day').value;
+  const ts = document.getElementById('f-time-start').value;
+  const te = document.getElementById('f-time-end').value;
+  const recorder = document.getElementById('f-recorder').value;
+  const place = document.getElementById('f-place').value;
+  const weather = document.getElementById('f-weather').value;
+  const content = document.getElementById('f-content').value;
+  const impression = document.getElementById('f-impression').value;
+  const pax = getPaxValues();
+
+  const dateStr = date ? `${date.replace(/-/g,'/')}（${day}）` : '';
+  const timeStr = ts||te ? `${ts||'　'}〜${te||'　'}` : '';
+
+  let photosHtml = '<div class="pv-photos">';
+  for (let i=0;i<2;i++) {
+    const cap = document.getElementById(`cap${i}`).value;
+    photosHtml += `<div class="pv-photo">${photos[i]
+      ? `<img src="${photos[i]}" alt="写真${i+1}">`
+      : `<div style="background:#f0f4f8;border:1px dashed #ccc;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;color:#aaa;font-size:11px;border-radius:4px;">[ 写真なし ]</div>`
+    }${cap?`<div class="pv-photo-cap">📌 ${cap}</div>`:''}</div>`;
+  }
+  photosHtml += '</div>';
+
+  document.getElementById('preview-content').innerHTML = `
+    <div class="preview-title">活 動 日 報</div>
+    <div class="pv-section">
+      <div class="pv-header">基本情報</div>
+      <div class="pv-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:6px;">
+          <div class="pv-field"><div class="pv-label">日付</div><div class="pv-value">${dateStr||'　'}</div></div>
+          <div class="pv-field"><div class="pv-label">時間</div><div class="pv-value">${timeStr||'　'}</div></div>
+          <div class="pv-field"><div class="pv-label">天候</div><div class="pv-value">${weather||'　'}</div></div>
+          <div class="pv-field"><div class="pv-label">記録者</div><div class="pv-value">${recorder||'　'}</div></div>
+          <div class="pv-field" style="grid-column:span 2"><div class="pv-label">場所</div><div class="pv-value">${place||'　'}</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="pv-section">
+      <div class="pv-header">参加者</div>
+      <div class="pv-body">
+        <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:6px;">合計 ${pax.total}名　｜　こども ${pax.kids}名　大人 ${pax.adults}名</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:3px;font-size:10px;color:#555;margin-bottom:4px;">
+          <span>未就学児 ${pax.preschool}</span><span>小学生 ${pax.elementary}</span><span>中学生 ${pax.junior}</span><span>高校生 ${pax.senior}</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:3px;font-size:10px;color:#555;">
+          <span>学校 ${pax.school}</span><span>地域 ${pax.community}</span><span>大学生 ${pax.univ}</span><span>その他 ${pax.other}</span>
+        </div>
+      </div>
+    </div>
+    <div class="pv-section">
+      <div class="pv-header">活動の記録</div>
+      <div class="pv-body">
+        <div style="margin-bottom:8px;"><div class="pv-label">【実施内容】</div><div class="pv-text">${content||'（未記入）'}</div></div>
+        <div><div class="pv-label">【所感・気づき・課題】</div><div class="pv-text">${impression||'（未記入）'}</div></div>
+      </div>
+    </div>
+    <div class="pv-section">
+      <div class="pv-header">写真記録</div>
+      <div class="pv-body">${photosHtml}</div>
+    </div>
+  `;
+}
+
+// 印刷
+function printReport() {
+  const date = document.getElementById('f-date').value;
+  const day = document.getElementById('f-day').value;
+  const ts = document.getElementById('f-time-start').value;
+  const te = document.getElementById('f-time-end').value;
+  const recorder = document.getElementById('f-recorder').value;
+  const place = document.getElementById('f-place').value;
+  const weather = document.getElementById('f-weather').value;
+  const content = document.getElementById('f-content').value;
+  const impression = document.getElementById('f-impression').value;
+  const pax = getPaxValues();
+
+  const dateStr = date ? `${date.replace(/-/g,'/')}（${day}）` : '　年　月　日（　）';
+  const timeStr = `${ts||'　：　'} ～ ${te||'　：　'}`;
+
+  let photosHtml = '<div class="pr-photo-grid">';
+  for (let i=0;i<2;i++) {
+    const cap = document.getElementById(`cap${i}`).value;
+    photosHtml += `<div class="pr-photo-item">${photos[i]
+      ? `<img src="${photos[i]}" alt="写真${i+1}">`
+      : `<div class="no-photo">[ 写真${i+1} ]</div>`
+    }<div class="pr-photo-caption">${cap||`写真${i+1}`}</div></div>`;
+  }
+  photosHtml += '</div>';
+
+  const now = new Date().toLocaleString('ja-JP');
+
+  document.getElementById('print-area').innerHTML = `
+    <div class="pr-title">活 動 日 報</div>
+
+    <div class="pr-section">
+      <div class="pr-section-header">基本情報</div>
+      <table class="pr-table">
+        <tr>
+          <td class="pr-label-cell">日付</td><td>${dateStr}</td>
+          <td class="pr-label-cell">時間</td><td>${timeStr}</td>
+          <td class="pr-label-cell">天候</td><td>${weather||'　'}</td>
+        </tr>
+        <tr>
+          <td class="pr-label-cell">記録者</td><td>${recorder||'　'}</td>
+          <td class="pr-label-cell">場所</td><td colspan="3">${place||'　'}</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="pr-section">
+      <div class="pr-section-header">参加者　合計 ${pax.total}名　｜　こども ${pax.kids}名　大人 ${pax.adults}名</div>
+      <table class="pr-pax-table">
+        <tr>
+          <td class="pr-pax-label">未就学児</td>
+          <td class="pr-pax-label">小学生</td>
+          <td class="pr-pax-label">中学生</td>
+          <td class="pr-pax-label">高校生</td>
+          <td class="pr-pax-label">学校関係</td>
+          <td class="pr-pax-label">地域住民</td>
+          <td class="pr-pax-label">大学生</td>
+          <td class="pr-pax-label">その他</td>
+        </tr>
+        <tr>
+          <td>${pax.preschool||'0'}</td>
+          <td>${pax.elementary||'0'}</td>
+          <td>${pax.junior||'0'}</td>
+          <td>${pax.senior||'0'}</td>
+          <td>${pax.school||'0'}</td>
+          <td>${pax.community||'0'}</td>
+          <td>${pax.univ||'0'}</td>
+          <td>${pax.other||'0'}</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="pr-section">
+      <div class="pr-section-header">活動の記録</div>
+      <div style="margin-bottom:2mm;">
+        <div class="pr-small-label">【実施内容】</div>
+        <div class="pr-text-box" style="min-height:38mm;">${content||'　'}</div>
+      </div>
+      <div>
+        <div class="pr-small-label">【所感・気づき・課題】</div>
+        <div class="pr-text-box" style="min-height:28mm;">${impression||'　'}</div>
+      </div>
+    </div>
+
+    <div class="pr-section">
+      <div class="pr-section-header">写真記録</div>
+      ${photosHtml}
+    </div>
+
+    <div class="pr-footer">
+      <span>leal.lab 活動日報</span>
+      <span>出力日時：${now}</span>
+    </div>
+  `;
+
+  showToast('印刷ダイアログを開いています…');
+  setTimeout(() => window.print(), 300);
+}
+
+// ===== PDF生成（Canvas描画方式 → 日本語文字化け解消） =====
+// スマホのシステムフォントでCanvasに描画 → JPEG化してjsPDFに貼り込む
+
+async function generatePDF() {
+  showToast('PDFを生成中…');
+
+  // データ収集
+  const date       = document.getElementById('f-date').value;
+  const day        = document.getElementById('f-day').value;
+  const ts         = document.getElementById('f-time-start').value;
+  const te         = document.getElementById('f-time-end').value;
+  const recorder   = document.getElementById('f-recorder').value;
+  const place      = document.getElementById('f-place').value;
+  const weather    = document.getElementById('f-weather').value;
+  const content    = document.getElementById('f-content').value;
+  const impression = document.getElementById('f-impression').value;
+  const pax        = getPaxValues();
+  const cap0       = document.getElementById('cap0').value || '写真1';
+  const cap1       = document.getElementById('cap1').value || '写真2';
+  const dateStr    = date ? date.replace(/-/g,'/') + `（${day}）` : '';
+  const timeStr    = (ts||te) ? `${ts||''}〜${te||''}` : '';
+  const now        = new Date().toLocaleString('ja-JP');
+  const fileName   = `活動日報_${date||'日付未設定'}.pdf`;
+
   try {
-    await fetch(gasUrl, {
-      method: 'POST', mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ savedAt, date: dateStr, dateJp: toReiwa(dateStr), addressee, amount, taxrate, taxBase, taxAmt, tadashi, shopname, issuer }),
+    // ===== A4 Canvas（2倍解像度） =====
+    // 1mm = 3.7795px @ 96dpi → A4: 794×1123px → ×2 = 1587×2245
+    const SCALE = 2;
+    const PXW = 794 * SCALE, PXH = 1123 * SCALE;
+    const cv  = document.createElement('canvas');
+    cv.width = PXW; cv.height = PXH;
+    const ctx = cv.getContext('2d');
+
+    // mm→px変換
+    const mm = v => v * 3.7795 * SCALE;
+
+    // マージン・幅
+    const ML = mm(12), MT = mm(12), CW = mm(186);
+    let y = MT;
+
+    // フォント
+    const FONT_JP = `"Noto Sans JP", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif`;
+
+    // ====== ヘルパ関数 ======
+
+    // 背景白塗り
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, PXW, PXH);
+
+    function sectionHeader(label) {
+      const h = mm(6);
+      ctx.fillStyle = '#2563a8';
+      ctx.fillRect(ML, y, CW, h);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = `bold ${mm(3.8)}px ${FONT_JP}`;
+      ctx.textBaseline = 'middle';
+      ctx.fillText('■ ' + label, ML + mm(2), y + h/2);
+      y += h + mm(1.5);
+    }
+
+    // 1行テーブル描画
+    function tableRow(cols) {
+      const h = mm(6);
+      let x = ML;
+      cols.forEach(({label, value, w, isLabel}) => {
+        const pw = mm(w);
+        // 枠
+        ctx.strokeStyle = '#bbbbbb';
+        ctx.lineWidth = 1;
+        ctx.fillStyle = isLabel ? '#f5f7fa' : '#ffffff';
+        ctx.fillRect(x, y, pw, h);
+        ctx.strokeRect(x, y, pw, h);
+        // テキスト
+        ctx.fillStyle = isLabel ? '#555555' : '#111111';
+        ctx.font = `${isLabel ? 'normal' : 'normal'} ${mm(3.2)}px ${FONT_JP}`;
+        ctx.textBaseline = 'middle';
+        const txt = isLabel ? label : String(value||'');
+        // はみ出し防止
+        ctx.save();
+        ctx.rect(x+mm(1), y, pw-mm(2), h);
+        ctx.clip();
+        ctx.fillText(txt, x + mm(1.2), y + h/2);
+        ctx.restore();
+        x += pw;
+      });
+      y += h;
+    }
+
+    // テキストボックス（折り返し対応）
+    function textBox(sublabel, text, minHmm) {
+      const FONT_SIZE = mm(3.5);
+      const LINE_H    = FONT_SIZE * 1.7;
+      const maxW      = CW - mm(4);
+
+      // サブラベル
+      ctx.fillStyle = '#555555';
+      ctx.font = `normal ${mm(3)}px ${FONT_JP}`;
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillText(sublabel, ML, y + mm(3.5));
+      y += mm(5);
+
+      // テキスト折り返し
+      ctx.font = `normal ${FONT_SIZE}px ${FONT_JP}`;
+      const lines = wrapText(ctx, text || '', maxW);
+      const boxH  = Math.max(mm(minHmm), lines.length * LINE_H + mm(4));
+
+      // 枠
+      ctx.strokeStyle = '#bbbbbb'; ctx.lineWidth = 1;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(ML, y, CW, boxH);
+      ctx.strokeRect(ML, y, CW, boxH);
+
+      // テキスト描画
+      ctx.fillStyle = '#111111';
+      ctx.textBaseline = 'top';
+      lines.forEach((line, i) => {
+        ctx.fillText(line, ML + mm(2), y + mm(2) + i * LINE_H);
+      });
+      y += boxH + mm(2);
+    }
+
+    // テキスト折り返し
+    function wrapText(ctx, text, maxW) {
+      const result = [];
+      (text || '').split('\n').forEach(para => {
+        if (para === '') { result.push(''); return; }
+        let line = '';
+        for (const ch of para) {
+          const test = line + ch;
+          if (ctx.measureText(test).width > maxW && line !== '') {
+            result.push(line);
+            line = ch;
+          } else {
+            line = test;
+          }
+        }
+        if (line) result.push(line);
+      });
+      return result.length ? result : [''];
+    }
+
+    // 写真埋め込み（Canvas内に直接描画）
+    async function drawPhoto(src, px, py, pw, ph, caption) {
+      ctx.strokeStyle = '#bbbbbb'; ctx.lineWidth = 1;
+      if (src) {
+        const img = new Image(); img.src = src;
+        await new Promise(r => { img.onload = r; img.onerror = r; });
+        // object-fit:cover 相当
+        const ar = img.width / img.height;
+        const br = pw / ph;
+        let sx,sy,sw,sh;
+        if (ar > br) { sh=img.height; sw=sh*br; sx=(img.width-sw)/2; sy=0; }
+        else         { sw=img.width;  sh=sw/br; sy=(img.height-sh)/2; sx=0; }
+        ctx.drawImage(img, sx, sy, sw, sh, px, py, pw, ph);
+        ctx.strokeRect(px, py, pw, ph);
+      } else {
+        ctx.fillStyle = '#f0f4f8';
+        ctx.fillRect(px, py, pw, ph);
+        ctx.strokeRect(px, py, pw, ph);
+        ctx.fillStyle = '#bbbbbb';
+        ctx.font = `normal ${mm(3.5)}px ${FONT_JP}`;
+        ctx.textBaseline = 'middle'; ctx.textAlign = 'center';
+        ctx.fillText('[ 写真なし ]', px + pw/2, py + ph/2);
+        ctx.textAlign = 'left';
+      }
+      // キャプション
+      ctx.fillStyle = '#555555';
+      ctx.font = `normal ${mm(3)}px ${FONT_JP}`;
+      ctx.textBaseline = 'top';
+      ctx.fillText(caption, px + mm(1), py + ph + mm(1));
+    }
+
+    // ====== 描画開始 ======
+
+    // タイトル
+    ctx.fillStyle = '#111111';
+    ctx.font = `bold ${mm(8)}px ${FONT_JP}`;
+    ctx.textBaseline = 'top'; ctx.textAlign = 'center';
+    ctx.fillText('活 動 日 報', PXW/2, y);
+    ctx.textAlign = 'left';
+    y += mm(14);
+
+    // 基本情報
+    sectionHeader('基本情報');
+    const c1=24,c2=52,c3=16,c4=46,c5=16,c6=186-c1-c2-c3-c4-c5;
+    tableRow([
+      {label:'日付',   w:c1, isLabel:true},
+      {value:dateStr,  w:c2},
+      {label:'時間',   w:c3, isLabel:true},
+      {value:timeStr,  w:c4},
+      {label:'天候',   w:c5, isLabel:true},
+      {value:weather,  w:c6},
+    ]);
+    tableRow([
+      {label:'記録者', w:c1, isLabel:true},
+      {value:recorder, w:c2},
+      {label:'場所',   w:c3, isLabel:true},
+      {value:place,    w:c4+c5+c6},
+    ]);
+    y += mm(3);
+
+    // 参加者
+    sectionHeader(`参加者　合計 ${pax.total}名  ｜  こども ${pax.kids}名  大人 ${pax.adults}名`);
+    const paxLabels = ['未就学児','小学生','中学生','高校生','学校関係','地域住民','大学生','その他'];
+    const paxVals   = [pax.preschool,pax.elementary,pax.junior,pax.senior,pax.school,pax.community,pax.univ,pax.other];
+    const pcw = CW / 8;
+    const rowH = mm(5);
+    // ラベル行
+    paxLabels.forEach((l,i) => {
+      const x = ML + pcw*i;
+      ctx.fillStyle = '#f5f7fa'; ctx.fillRect(x, y, pcw, rowH);
+      ctx.strokeStyle = '#bbbbbb'; ctx.strokeRect(x, y, pcw, rowH);
+      ctx.fillStyle = '#555555';
+      ctx.font = `normal ${mm(2.8)}px ${FONT_JP}`;
+      ctx.textBaseline = 'middle'; ctx.textAlign = 'center';
+      ctx.fillText(l, x + pcw/2, y + rowH/2);
     });
-    showToast('✓ スプレッドシートに保存しました');
+    y += rowH;
+    // 数値行
+    paxVals.forEach((v,i) => {
+      const x = ML + pcw*i;
+      ctx.fillStyle = '#ffffff'; ctx.fillRect(x, y, pcw, rowH);
+      ctx.strokeStyle = '#bbbbbb'; ctx.strokeRect(x, y, pcw, rowH);
+      ctx.fillStyle = '#111111';
+      ctx.font = `bold ${mm(3.8)}px ${FONT_JP}`;
+      ctx.textBaseline = 'middle'; ctx.textAlign = 'center';
+      ctx.fillText(String(v), x + pcw/2, y + rowH/2);
+    });
+    ctx.textAlign = 'left';
+    y += rowH + mm(3);
+
+    // 活動記録
+    sectionHeader('活動の記録');
+    textBox('【実施内容】', content, 28);
+    textBox('【所感・気づき・課題】', impression, 20);
+    y += mm(1);
+
+    // 写真
+    sectionHeader('写真記録');
+    const photoW = (CW - mm(4)) / 2;
+    const photoH = photoW * 0.68;
+    await drawPhoto(photos[0], ML,              y, photoW, photoH, cap0);
+    await drawPhoto(photos[1], ML+photoW+mm(4), y, photoW, photoH, cap1);
+    y += photoH + mm(8);
+
+    // フッター
+    ctx.strokeStyle = '#cccccc'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(ML, y); ctx.lineTo(ML+CW, y); ctx.stroke();
+    y += mm(2.5);
+    ctx.fillStyle = '#aaaaaa';
+    ctx.font = `normal ${mm(2.8)}px ${FONT_JP}`;
+    ctx.textBaseline = 'top';
+    ctx.fillText('leal.lab 活動日報', ML, y);
+    ctx.textAlign = 'right';
+    ctx.fillText('出力日時：' + now, ML+CW, y);
+    ctx.textAlign = 'left';
+
+    // ===== jsPDFにCanvasを貼り付け =====
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+    const jpeg = cv.toDataURL('image/jpeg', 0.92);
+    pdf.addImage(jpeg, 'JPEG', 0, 0, 210, 297);
+    pdf.save(fileName);
+    showToast('PDFを保存しました ✓');
+
   } catch(e) {
-    showToast('送信失敗。URL を確認してください', true);
-  } finally {
-    btn.disabled = false; if (btnText) btnText.textContent = 'スプレッドシートに保存';
+    console.error(e);
+    showToast('PDF生成に失敗しました: ' + e.message);
   }
 }
 
-// ===== イベント =====
-['f-addressee','f-date','f-amount','f-taxrate','f-tadashi','f-shopname','f-issuer'].forEach(id => {
-  const el = document.getElementById(id);
-  el.addEventListener('input', updateReceipt);
-  el.addEventListener('change', updateReceipt);
-});
+// ===== GAS URL 保存・読み込み =====
+function saveGasUrl() {
+  const url = document.getElementById('gas-url').value.trim();
+  if (!url.startsWith('https://script.google.com')) {
+    showToast('正しいGAS URLを入力してください');
+    return;
+  }
+  localStorage.setItem('gasUrl', url);
+  showToast('URLを保存しました ✓');
+  updateGasStatus();
+}
 
-// ===== 初期化 =====
-sv('f-date', new Date().toISOString().split('T')[0]);
-loadForm();
-const savedSeal = localStorage.getItem(SEAL_K);
-if (savedSeal) applySeal(savedSeal);
-updateReceipt();
-scaleReceipt();
+function loadGasUrl() {
+  const saved = localStorage.getItem('gasUrl') || '';
+  document.getElementById('gas-url').value = saved;
+  updateGasStatus();
+}
+
+function updateGasStatus() {
+  const url = localStorage.getItem('gasUrl');
+  const card = document.getElementById('gas-setting-card');
+  const status = document.getElementById('sheet-status');
+  if (url) {
+    card.style.display = 'none'; // URL設定済みなら設定カードを折りたたむ
+    status.innerHTML = `<span style="color:#059669;">✓ 連携済み</span>　<a href="#" onclick="document.getElementById('gas-setting-card').style.display='';return false;" style="color:var(--blue);font-size:10px;">URL変更</a>`;
+  } else {
+    card.style.display = '';
+    status.textContent = 'URLが未設定です';
+  }
+}
+
+// ===== スプレッドシートに記録 =====
+async function saveToSheet() {
+  const gasUrl = localStorage.getItem('gasUrl');
+  if (!gasUrl) {
+    showToast('GAS URLを先に設定してください');
+    document.getElementById('gas-setting-card').style.display = '';
+    return;
+  }
+
+  const pax = getPaxValues();
+  if (pax.total === 0) {
+    showToast('人数を入力してから送信してください');
+    return;
+  }
+
+  const btn    = document.getElementById('btn-save-sheet');
+  const status = document.getElementById('sheet-status');
+
+  btn.disabled = true;
+  btn.textContent = '送信中…';
+  status.textContent = '';
+
+  const payload = {
+    date:        document.getElementById('f-date').value,
+    day:         document.getElementById('f-day').value,
+    timeStart:   document.getElementById('f-time-start').value,
+    timeEnd:     document.getElementById('f-time-end').value,
+    recorder:    document.getElementById('f-recorder').value,
+    place:       document.getElementById('f-place').value,
+    weather:     document.getElementById('f-weather').value,
+    preschool:   pax.preschool,
+    elementary:  pax.elementary,
+    junior:      pax.junior,
+    senior:      pax.senior,
+    kidsTotal:   pax.kids,
+    school:      pax.school,
+    community:   pax.community,
+    univ:        pax.univ,
+    otherAdult:  pax.other,
+    adultsTotal: pax.adults,
+    grandTotal:  pax.total,
+  };
+
+  try {
+    // GASはリダイレクトするのでfollowが必要
+    const res = await fetch(gasUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' }, // application/jsonだとpreflight発生するためtext/plainで送る
+      body: JSON.stringify(payload),
+      redirect: 'follow',
+    });
+
+    const text = await res.text();
+    let result;
+    try { result = JSON.parse(text); } catch(e) { result = { status: 'ok' }; }
+
+    btn.disabled = false;
+    btn.innerHTML = '📊 スプレッドシートに記録';
+
+    if (result.status === 'error') {
+      status.innerHTML = `<span style="color:#ef4444;">GASエラー：${result.message}</span>`;
+      showToast('GASエラーが発生しました');
+    } else {
+      status.innerHTML = `<span style="color:#059669;">✓ ${payload.date} の記録を送信しました（${pax.total}名）</span>`;
+      showToast('スプレッドシートに記録しました ✓');
+    }
+
+  } catch(e) {
+    btn.disabled = false;
+    btn.innerHTML = '📊 スプレッドシートに記録';
+    status.innerHTML = `<span style="color:#ef4444;">送信失敗：${e.message}</span>`;
+    showToast('送信に失敗しました');
+    console.error(e);
+  }
+}
+
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+<script>
+// Service Worker 登録 + 古いSWを強制更新
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', async () => {
+    try {
+      const reg = await navigator.serviceWorker.register('./sw.js');
+      // 新しいSWが待機中なら即座に有効化
+      if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+      reg.addEventListener('updatefound', () => {
+        const newSW = reg.installing;
+        newSW.addEventListener('statechange', () => {
+          if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
+            newSW.postMessage({ type: 'SKIP_WAITING' });
+            window.location.reload();
+          }
+        });
+      });
+      console.log('SW registered:', reg.scope);
+    } catch(err) {
+      console.log('SW error:', err);
+    }
+  });
+}
 </script>
 </body>
 </html>
