@@ -156,6 +156,131 @@
   .btn-sheet:hover { background: #047857; }
   .btn-sheet:disabled { background: #9ca3af; box-shadow: none; cursor: not-allowed; }
 
+  /* アーカイブ保存ボタン */
+  .btn-archive { background: #7c3aed; color: white; padding: 14px; font-size: 14px; border-radius: 10px; box-shadow: 0 2px 8px rgba(124,58,237,0.3); }
+  .btn-archive:hover { background: #6d28d9; transform: translateY(-1px); }
+
+  /* ラベル行（ラベル＋クリアボタン） */
+  .label-row {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 5px; gap: 8px;
+  }
+  .label-row label { margin: 0; }
+
+  /* クリアボタン（小） */
+  .btn-clear {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--gray);
+    font-size: 10.5px;
+    font-family: 'Noto Sans JP', sans-serif;
+    padding: 3px 10px;
+    border-radius: 20px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s;
+    flex-shrink: 0;
+    line-height: 1.5;
+  }
+  .btn-clear:hover, .btn-clear:active {
+    background: #fef2f2;
+    border-color: #fca5a5;
+    color: #dc2626;
+  }
+  .btn-clear::before { content: '✕ '; font-size: 9px; }
+
+  /* アーカイブカード */
+  .archive-item {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    background: #fafbfc;
+    transition: all 0.15s;
+  }
+  .archive-item:hover { border-color: var(--blue-mid); background: #f8fbff; }
+
+  .archive-head {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    gap: 8px; margin-bottom: 6px;
+  }
+  .archive-date { font-size: 13px; font-weight: 700; color: var(--blue); }
+  .archive-meta { font-size: 11px; color: var(--gray); margin-top: 2px; }
+  .archive-preview {
+    font-size: 11px; color: #4b5563; line-height: 1.5;
+    overflow: hidden; display: -webkit-box;
+    -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    margin-bottom: 8px;
+  }
+  .archive-thumbs { display: flex; gap: 4px; margin-bottom: 8px; }
+  .archive-thumbs img {
+    width: 44px; height: 34px; object-fit: cover;
+    border-radius: 4px; border: 1px solid var(--border);
+  }
+  .archive-actions { display: flex; gap: 6px; }
+  .archive-actions button {
+    flex: 1; font-size: 11px; padding: 6px 8px;
+    border-radius: 6px; cursor: pointer;
+    font-family: 'Noto Sans JP', sans-serif;
+    border: 1px solid var(--border); background: white;
+    transition: all 0.15s;
+  }
+  .archive-actions .act-load { color: var(--blue); border-color: var(--blue-mid); font-weight: 500; }
+  .archive-actions .act-load:hover { background: var(--blue-light); }
+  .archive-actions .act-del { color: #dc2626; border-color: #fca5a5; }
+  .archive-actions .act-del:hover { background: #fef2f2; }
+
+  .archive-badge {
+    background: var(--blue-light); color: var(--accent);
+    font-size: 10px; padding: 2px 8px; border-radius: 10px;
+    white-space: nowrap; font-weight: 700;
+  }
+
+  /* 再読み込みボタン */
+  .btn-refresh {
+    background: white; border: 1px solid var(--border);
+    border-radius: 6px; width: 40px; font-size: 16px;
+    cursor: pointer; flex-shrink: 0; transition: all 0.15s;
+  }
+  .btn-refresh:hover { background: var(--blue-light); border-color: var(--blue-mid); }
+  .btn-refresh.spinning { animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* 編集ステータスバー */
+  .edit-status {
+    font-size: 12px; padding: 8px 12px; border-radius: 8px;
+    margin-bottom: 10px; text-align: center; display: none;
+  }
+  .edit-status.editing {
+    display: block; background: #f3e8ff; color: #6d28d9;
+    border: 1px solid #d8b4fe; font-weight: 500;
+  }
+  .edit-status.new {
+    display: block; background: var(--blue-light); color: var(--accent);
+    border: 1px solid var(--blue-mid);
+  }
+
+  /* 編集中バナー（画面上部固定） */
+  .editing-banner {
+    background: #7c3aed; color: white; padding: 7px 14px;
+    font-size: 12px; display: none; align-items: center;
+    justify-content: space-between; gap: 10px;
+    position: sticky; top: 53px; z-index: 98;
+  }
+  .editing-banner.show { display: flex; }
+  .editing-banner button {
+    background: rgba(255,255,255,0.25); border: 1px solid rgba(255,255,255,0.4);
+    color: white; font-size: 11px; padding: 3px 10px; border-radius: 12px;
+    cursor: pointer; font-family: 'Noto Sans JP', sans-serif; white-space: nowrap;
+  }
+
+  /* ローディング */
+  .loading-dots { display: inline-block; }
+  .loading-dots::after {
+    content: '…'; animation: dots 1.2s steps(4, end) infinite;
+  }
+  @keyframes dots { 0%,20% { content: '.'; } 40% { content: '..'; } 60%,100% { content: '…'; } }
+
   /* プレビュー */
   .preview-container { background: white; border-radius: 10px; padding: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.12); }
   .preview-title { font-family: 'Noto Serif JP', serif; font-size: 20px; font-weight: 700; text-align: center; margin-bottom: 16px; letter-spacing: 0.1em; }
@@ -248,6 +373,7 @@
     <h1>📋 活動日報</h1>
     <div style="display:flex;gap:8px;">
       <button class="header-btn" onclick="switchView('edit')" id="btn-edit">編集</button>
+      <button class="header-btn" onclick="saveToCloud()" title="クラウドに保存">☁️</button>
       <button class="header-btn" onclick="switchView('preview')" id="btn-preview">プレビュー</button>
       <button class="header-btn primary" onclick="generatePDF()">📄 PDF</button>
     </div>
@@ -257,6 +383,12 @@
     <div class="tab active" onclick="switchTab(0)" id="tab0"><span class="tab-icon">📄</span>基本情報</div>
     <div class="tab" onclick="switchTab(1)" id="tab1"><span class="tab-icon">✏️</span>活動記録</div>
     <div class="tab" onclick="switchTab(2)" id="tab2"><span class="tab-icon">📷</span>写真記録</div>
+    <div class="tab" onclick="switchTab(3)" id="tab3"><span class="tab-icon">🗂</span>アーカイブ</div>
+  </div>
+
+  <div class="editing-banner" id="editing-banner">
+    <span id="editing-banner-text">編集中</span>
+    <button onclick="newReport()">新規に切替</button>
   </div>
 
   <main>
@@ -355,14 +487,6 @@
             <div class="participant-total">
               <span id="total-display">合計 0名　｜　こども 0名　大人 0名</span>
             </div>
-
-            <!-- スプレッドシート送信ボタン -->
-            <div style="margin-top:12px;">
-              <button class="btn btn-sheet" onclick="saveToSheet()" id="btn-save-sheet">
-                📊 スプレッドシートに記録
-              </button>
-              <div id="sheet-status" style="margin-top:6px;font-size:11px;text-align:center;color:var(--gray);min-height:16px;"></div>
-            </div>
           </div>
         </div>
 
@@ -378,13 +502,14 @@
               URLを保存する
             </button>
             <div style="margin-top:10px;padding:10px;background:var(--blue-light);border-radius:6px;font-size:11px;line-height:1.8;color:#1e40af;">
-              設定方法：<br>
-              ① Googleスプレッドシートを新規作成<br>
-              ② 拡張機能 → Apps Script → gas_code.js の内容を貼り付け<br>
-              ③ SPREADSHEET_ID を入力して保存<br>
-              ④ デプロイ → 新しいデプロイ → ウェブアプリ<br>
-              ⑤ アクセス：「全員」に設定してデプロイ<br>
-              ⑥ 表示されたURLをここに貼り付けて保存
+              <b>設定手順</b><br>
+              ① スプレッドシートを作成しIDを控える<br>
+              ② ドライブに写真保存用フォルダを作りIDを控える<br>
+              ③ 拡張機能 → Apps Script に gas_code.js を貼付<br>
+              ④ 2つのIDを入力して保存<br>
+              ⑤ デプロイ → ウェブアプリ（アクセス：全員）<br>
+              ⑥ 発行URLをここに貼り付けて保存<br>
+              <span style="color:#7c3aed;">※ 他の端末でも同じURLを設定すれば共有できます</span>
             </div>
           </div>
         </div>
@@ -397,7 +522,10 @@
           <div class="section-header">活動の記録</div>
           <div class="section-body">
             <div class="form-group" style="margin-bottom:14px;">
-              <label>【実施内容】<span style="color:var(--gray);font-weight:400;">（300字以内）</span></label>
+              <div class="label-row">
+                <label>【実施内容】<span style="color:var(--gray);font-weight:400;">（300字以内）</span></label>
+                <button class="btn-clear" onclick="clearField('f-content','cnt-content',300)">クリア</button>
+              </div>
               <div class="textarea-wrap">
                 <textarea id="f-content" rows="7" maxlength="300" placeholder="実施した活動内容を詳しく記録してください" oninput="updateCounter('f-content','cnt-content',300)"></textarea>
                 <div class="char-counter" id="cnt-content">0 / 300 文字</div>
@@ -405,7 +533,10 @@
               </div>
             </div>
             <div class="form-group">
-              <label>【所感・気づき・課題】<span style="color:var(--gray);font-weight:400;">（200字以内）</span></label>
+              <div class="label-row">
+                <label>【所感・気づき・課題】<span style="color:var(--gray);font-weight:400;">（200字以内）</span></label>
+                <button class="btn-clear" onclick="clearField('f-impression','cnt-impression',200)">クリア</button>
+              </div>
               <div class="textarea-wrap">
                 <textarea id="f-impression" rows="5" maxlength="200" placeholder="感じたこと、気づいたこと、今後の課題など" oninput="updateCounter('f-impression','cnt-impression',200)"></textarea>
                 <div class="char-counter" id="cnt-impression">0 / 200 文字</div>
@@ -424,6 +555,10 @@
         <div class="section-card">
           <div class="section-header">写真記録</div>
           <div class="section-body">
+            <div class="label-row" style="margin-bottom:10px;">
+              <label style="font-size:11px;">写真は最大2枚まで添付できます</label>
+              <button class="btn-clear" onclick="clearCaptions()">キャプションをクリア</button>
+            </div>
             <div class="photo-grid">
               <div>
                 <div class="photo-slot" id="slot0" onclick="document.getElementById('file0').click()">
@@ -450,9 +585,47 @@
             </div>
           </div>
         </div>
-        <button class="btn btn-primary" onclick="generatePDF()" style="margin-bottom:20px;">
-          📄 PDFを作成・保存
-        </button>
+        <div style="margin-bottom:20px;">
+          <div id="edit-status" class="edit-status"></div>
+          <div style="display:flex;gap:10px;">
+            <button class="btn btn-archive" onclick="saveToCloud()" id="btn-cloud-save" style="flex:1.3;">
+              ☁️ クラウドに保存
+            </button>
+            <button class="btn btn-primary" onclick="generatePDF()" style="flex:1;">
+              📄 PDF
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: アーカイブ -->
+      <div id="section-tab3" style="display:none;">
+        <div class="section-card">
+          <div class="section-header">クラウド保存された日報</div>
+          <div class="section-body">
+            <div style="display:flex;gap:8px;margin-bottom:10px;">
+              <input type="text" id="archive-search" placeholder="🔍 日付・場所・記録者で検索" oninput="renderArchive()" style="flex:1;font-size:13px;">
+              <button class="btn-refresh" onclick="fetchArchive(true)" title="再読み込み">🔄</button>
+            </div>
+            <div id="archive-list">
+              <div style="text-align:center;padding:30px 10px;color:var(--gray);font-size:13px;">
+                読み込み中…
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-card">
+          <div class="section-header">新規作成</div>
+          <div class="section-body">
+            <button class="btn btn-outline" onclick="newReport()" style="width:100%;padding:12px;">
+              ✨ 入力内容をクリアして新規作成
+            </button>
+            <div style="margin-top:8px;font-size:11px;color:var(--gray);text-align:center;">
+              ※ 保存済みのデータは削除されません
+            </div>
+          </div>
+        </div>
       </div>
 
     </div><!-- /edit-view -->
@@ -482,6 +655,7 @@ window.addEventListener('load', () => {
   updateDay();
   document.getElementById('f-date').addEventListener('change', updateDay);
   loadGasUrl();
+  setEditingState(null);
 });
 
 function updateDay() {
@@ -530,11 +704,12 @@ function getPaxValues() {
 
 // タブ
 function switchTab(n) {
-  for (let i=0;i<3;i++) {
+  for (let i=0;i<4;i++) {
     document.getElementById(`tab${i}`).classList.toggle('active', i===n);
     document.getElementById(`section-tab${i}`).style.display = i===n ? '' : 'none';
   }
   currentTab = n;
+  if (n === 3) fetchArchive();
 }
 
 // ビュー
@@ -552,6 +727,7 @@ function handlePhoto(idx, input) {
   const reader = new FileReader();
   reader.onload = (e) => {
     photos[idx] = e.target.result;
+    photoChanged[idx] = true;
     const slot = document.getElementById(`slot${idx}`);
     const old = slot.querySelector('img'); if (old) old.remove();
     const img = document.createElement('img'); img.src = e.target.result; slot.appendChild(img);
@@ -562,6 +738,7 @@ function handlePhoto(idx, input) {
   reader.readAsDataURL(file);
 }
 function removePhoto(idx) {
+  if (photos[idx]) photoChanged[idx] = true;
   photos[idx] = null;
   const slot = document.getElementById(`slot${idx}`);
   const img = slot.querySelector('img'); if (img) img.remove();
@@ -1028,92 +1205,344 @@ function loadGasUrl() {
 function updateGasStatus() {
   const url = localStorage.getItem('gasUrl');
   const card = document.getElementById('gas-setting-card');
-  const status = document.getElementById('sheet-status');
-  if (url) {
-    card.style.display = 'none'; // URL設定済みなら設定カードを折りたたむ
-    status.innerHTML = `<span style="color:#059669;">✓ 連携済み</span>　<a href="#" onclick="document.getElementById('gas-setting-card').style.display='';return false;" style="color:var(--blue);font-size:10px;">URL変更</a>`;
+  if (!card) return;
+  card.style.display = url ? 'none' : '';
+}
+
+// ============================================================
+// クラウド通信（GAS）
+// ============================================================
+function getGasUrl() {
+  const url = localStorage.getItem('gasUrl');
+  if (!url) {
+    showToast('先にGAS URLを設定してください');
+    switchTab(0);
+    const card = document.getElementById('gas-setting-card');
+    if (card) { card.style.display = ''; card.scrollIntoView({behavior:'smooth'}); }
+    return null;
+  }
+  return url;
+}
+
+async function gasCall(action, payload) {
+  const url = getGasUrl();
+  if (!url) throw new Error('GAS URLが未設定です');
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify(Object.assign({ action: action }, payload || {})),
+    redirect: 'follow',
+  });
+  const text = await res.text();
+  let result;
+  try { result = JSON.parse(text); }
+  catch (e) { throw new Error('サーバー応答が不正です'); }
+  if (result.status === 'error') throw new Error(result.message || '不明なエラー');
+  return result;
+}
+
+// ============================================================
+// 編集状態の管理
+// ============================================================
+let editingId = null;       // 編集中のクラウドID（nullなら新規）
+let loadedPhotoIds = [null, null]; // 読み込み時に既存写真があったか
+let photoChanged = [false, false]; // 写真が変更されたか
+
+function setEditingState(id, label) {
+  editingId = id;
+  const banner = document.getElementById('editing-banner');
+  const bannerText = document.getElementById('editing-banner-text');
+  const status = document.getElementById('edit-status');
+  const btn = document.getElementById('btn-cloud-save');
+
+  if (id) {
+    banner.classList.add('show');
+    bannerText.textContent = '📝 ' + (label || '保存済みの日報') + ' を編集中';
+    if (status) {
+      status.className = 'edit-status editing';
+      status.textContent = '保存すると既存データが上書きされます';
+    }
+    if (btn) btn.innerHTML = '☁️ 上書き保存';
   } else {
-    card.style.display = '';
-    status.textContent = 'URLが未設定です';
+    banner.classList.remove('show');
+    if (status) {
+      status.className = 'edit-status new';
+      status.textContent = '新規の日報として保存されます';
+    }
+    if (btn) btn.innerHTML = '☁️ クラウドに保存';
   }
 }
 
-// ===== スプレッドシートに記録 =====
-async function saveToSheet() {
-  const gasUrl = localStorage.getItem('gasUrl');
-  if (!gasUrl) {
-    showToast('GAS URLを先に設定してください');
-    document.getElementById('gas-setting-card').style.display = '';
-    return;
-  }
-
+// ============================================================
+// フォーム内容の収集
+// ============================================================
+function collectFormData() {
   const pax = getPaxValues();
-  if (pax.total === 0) {
-    showToast('人数を入力してから送信してください');
-    return;
-  }
-
-  const btn    = document.getElementById('btn-save-sheet');
-  const status = document.getElementById('sheet-status');
-
-  btn.disabled = true;
-  btn.textContent = '送信中…';
-  status.textContent = '';
-
-  const payload = {
-    date:        document.getElementById('f-date').value,
-    day:         document.getElementById('f-day').value,
-    timeStart:   document.getElementById('f-time-start').value,
-    timeEnd:     document.getElementById('f-time-end').value,
-    recorder:    document.getElementById('f-recorder').value,
-    place:       document.getElementById('f-place').value,
-    weather:     document.getElementById('f-weather').value,
-    preschool:   pax.preschool,
-    elementary:  pax.elementary,
-    junior:      pax.junior,
-    senior:      pax.senior,
-    kidsTotal:   pax.kids,
-    school:      pax.school,
-    community:   pax.community,
-    univ:        pax.univ,
-    otherAdult:  pax.other,
-    adultsTotal: pax.adults,
-    grandTotal:  pax.total,
+  return {
+    id:         editingId,
+    date:       document.getElementById('f-date').value,
+    day:        document.getElementById('f-day').value,
+    timeStart:  document.getElementById('f-time-start').value,
+    timeEnd:    document.getElementById('f-time-end').value,
+    recorder:   document.getElementById('f-recorder').value,
+    place:      document.getElementById('f-place').value,
+    weather:    document.getElementById('f-weather').value,
+    preschool:  pax.preschool, elementary: pax.elementary,
+    junior:     pax.junior,    senior:     pax.senior,
+    school:     pax.school,    community:  pax.community,
+    univ:       pax.univ,      other:      pax.other,
+    content:    document.getElementById('f-content').value,
+    impression: document.getElementById('f-impression').value,
+    cap0:       document.getElementById('cap0').value,
+    cap1:       document.getElementById('cap1').value,
+    // 写真：変更なければ 'KEEP' を送って転送量を節約
+    photo0: photoPayload(0),
+    photo1: photoPayload(1),
   };
+}
+
+function photoPayload(i) {
+  if (photoChanged[i]) return photos[i];      // 新規/変更/削除(null)
+  if (loadedPhotoIds[i]) return 'KEEP';       // 既存維持
+  return photos[i];                            // 新規作成時
+}
+
+// ============================================================
+// クラウドに保存（新規 or 上書き）
+// ============================================================
+async function saveToCloud() {
+  const data = collectFormData();
+  if (!data.date) { showToast('日付を入力してください'); switchTab(0); return; }
+
+  const btn = document.getElementById('btn-cloud-save');
+  const origHtml = btn ? btn.innerHTML : '';
+  if (btn) { btn.disabled = true; btn.innerHTML = '保存中<span class="loading-dots"></span>'; }
 
   try {
-    // GASはリダイレクトするのでfollowが必要
-    const res = await fetch(gasUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain' }, // application/jsonだとpreflight発生するためtext/plainで送る
-      body: JSON.stringify(payload),
-      redirect: 'follow',
-    });
-
-    const text = await res.text();
-    let result;
-    try { result = JSON.parse(text); } catch(e) { result = { status: 'ok' }; }
-
-    btn.disabled = false;
-    btn.innerHTML = '📊 スプレッドシートに記録';
-
-    if (result.status === 'error') {
-      status.innerHTML = `<span style="color:#ef4444;">GASエラー：${result.message}</span>`;
-      showToast('GASエラーが発生しました');
-    } else {
-      status.innerHTML = `<span style="color:#059669;">✓ ${payload.date} の記録を送信しました（${pax.total}名）</span>`;
-      showToast('スプレッドシートに記録しました ✓');
-    }
-
-  } catch(e) {
-    btn.disabled = false;
-    btn.innerHTML = '📊 スプレッドシートに記録';
-    status.innerHTML = `<span style="color:#ef4444;">送信失敗：${e.message}</span>`;
-    showToast('送信に失敗しました');
+    const res = await gasCall('save', { data: data });
+    setEditingState(res.id, data.date.replace(/-/g,'/'));
+    // 保存後は写真の変更フラグをリセット
+    photoChanged = [false, false];
+    loadedPhotoIds = [photos[0] ? 'saved' : null, photos[1] ? 'saved' : null];
+    archiveCache = null; // 一覧キャッシュを無効化
+    showToast(res.isNew ? 'クラウドに保存しました ✓' : '上書き保存しました ✓');
+  } catch (e) {
     console.error(e);
+    showToast('保存に失敗：' + e.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = editingId ? '☁️ 上書き保存' : '☁️ クラウドに保存'; }
   }
 }
 
+// ============================================================
+// アーカイブ一覧
+// ============================================================
+let archiveCache = null;
+
+async function fetchArchive(force) {
+  const listEl = document.getElementById('archive-list');
+  const refreshBtn = document.querySelector('.btn-refresh');
+
+  if (archiveCache && !force) { renderArchive(); return; }
+
+  if (refreshBtn) refreshBtn.classList.add('spinning');
+  listEl.innerHTML = `<div style="text-align:center;padding:30px 10px;color:var(--gray);font-size:13px;">
+    読み込み中<span class="loading-dots"></span></div>`;
+
+  try {
+    const res = await gasCall('list');
+    archiveCache = res.items || [];
+    renderArchive();
+  } catch (e) {
+    console.error(e);
+    listEl.innerHTML = `<div style="text-align:center;padding:24px 12px;color:#dc2626;font-size:12px;line-height:1.7;">
+      読み込みエラー<br><span style="font-size:11px;color:var(--gray);">${escapeHtml(e.message)}</span><br>
+      <button class="btn-clear" style="margin-top:10px;" onclick="fetchArchive(true)">再試行</button>
+    </div>`;
+  } finally {
+    if (refreshBtn) refreshBtn.classList.remove('spinning');
+  }
+}
+
+function renderArchive() {
+  const listEl = document.getElementById('archive-list');
+  if (!listEl) return;
+  if (!archiveCache) { fetchArchive(); return; }
+
+  const q = (document.getElementById('archive-search')?.value || '').trim().toLowerCase();
+  const filtered = q
+    ? archiveCache.filter(r => [r.date, r.place, r.recorder, r.content].join(' ').toLowerCase().includes(q))
+    : archiveCache;
+
+  if (filtered.length === 0) {
+    listEl.innerHTML = `<div style="text-align:center;padding:30px 10px;color:var(--gray);font-size:13px;">
+      ${q ? '該当する日報がありません' : 'まだ保存された日報はありません'}</div>`;
+    return;
+  }
+
+  listEl.innerHTML = filtered.map(r => {
+    const dateDisp = r.date ? String(r.date).replace(/-/g,'/') + (r.day ? `（${r.day}）` : '') : '日付なし';
+    const isEditing = (editingId === r.id);
+    return `<div class="archive-item"${isEditing ? ' style="border-color:#a78bfa;background:#faf5ff;"' : ''}>
+      <div class="archive-head">
+        <div style="min-width:0;">
+          <div class="archive-date">${dateDisp}${isEditing ? ' <span style="font-size:10px;color:#7c3aed;">● 編集中</span>' : ''}</div>
+          <div class="archive-meta">${escapeHtml(r.place || '場所未記入')}　/　${escapeHtml(r.recorder || '記録者未記入')}${r.hasPhoto ? '　📷' : ''}</div>
+        </div>
+        <span class="archive-badge">${r.total || 0}名</span>
+      </div>
+      ${r.content ? `<div class="archive-preview">${escapeHtml(r.content)}</div>` : ''}
+      <div class="archive-actions">
+        <button class="act-load" onclick="loadFromCloud('${r.id}')">📂 読み込んで編集</button>
+        <button class="act-del" onclick="deleteFromCloud('${r.id}','${escapeHtml(dateDisp)}')">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g,
+    m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+// ============================================================
+// クラウドから読み込んで編集
+// ============================================================
+async function loadFromCloud(id) {
+  const listEl = document.getElementById('archive-list');
+  const prev = listEl.innerHTML;
+  listEl.innerHTML = `<div style="text-align:center;padding:30px;color:var(--gray);font-size:13px;">
+    読み込み中<span class="loading-dots"></span></div>`;
+
+  try {
+    const res = await gasCall('get', { id: id });
+    const d = res.data;
+
+    const set = (elId, val) => { const el = document.getElementById(elId); if (el) el.value = val || ''; };
+    set('f-date', d.date);
+    set('f-day', d.day);
+    set('f-time-start', d.timeStart);
+    set('f-time-end', d.timeEnd);
+    set('f-recorder', d.recorder);
+    set('f-place', d.place);
+    set('f-weather', d.weather);
+    set('p-preschool',  d.preschool  || '');
+    set('p-elementary', d.elementary || '');
+    set('p-junior',     d.junior     || '');
+    set('p-senior',     d.senior     || '');
+    set('p-school',     d.school     || '');
+    set('p-community',  d.community  || '');
+    set('p-univ',       d.univ       || '');
+    set('p-other',      d.other      || '');
+    set('f-content', d.content);
+    set('f-impression', d.impression);
+    set('cap0', d.cap0);
+    set('cap1', d.cap1);
+
+    // 曜日が空なら日付から補完
+    if (!d.day && d.date) updateDay();
+
+    // 写真復元
+    [d.photo0, d.photo1].forEach((src, i) => {
+      removePhoto(i);
+      if (src) {
+        photos[i] = src;
+        const slot = document.getElementById(`slot${i}`);
+        const img = document.createElement('img'); img.src = src;
+        slot.appendChild(img); slot.classList.add('has-img');
+        document.getElementById(`rm${i}`).style.display = 'flex';
+      }
+    });
+    loadedPhotoIds = [d.photo0Id || null, d.photo1Id || null];
+    photoChanged = [false, false];
+
+    calcTotal();
+    updateCounter('f-content','cnt-content',300);
+    updateCounter('f-impression','cnt-impression',200);
+
+    setEditingState(id, String(d.date || '').replace(/-/g,'/'));
+    switchTab(0);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    showToast('読み込みました ✓ 編集後は上書き保存できます');
+
+  } catch (e) {
+    console.error(e);
+    listEl.innerHTML = prev;
+    showToast('読み込みに失敗：' + e.message);
+  }
+}
+
+// ============================================================
+// クラウドから削除
+// ============================================================
+async function deleteFromCloud(id, label) {
+  if (!confirm(`「${label}」の日報を削除しますか？\n写真も一緒に削除されます。\nこの操作は取り消せません。`)) return;
+  try {
+    await gasCall('delete', { id: id });
+    if (editingId === id) setEditingState(null);
+    archiveCache = null;
+    await fetchArchive(true);
+    showToast('削除しました');
+  } catch (e) {
+    console.error(e);
+    showToast('削除に失敗：' + e.message);
+  }
+}
+
+// ============================================================
+// クリア機能
+// ============================================================
+function clearField(fieldId, counterId, max) {
+  const el = document.getElementById(fieldId);
+  if (!el.value) { showToast('すでに空です'); return; }
+  el.value = '';
+  updateCounter(fieldId, counterId, max);
+  showToast('クリアしました');
+}
+
+function clearCaptions() {
+  const c0 = document.getElementById('cap0');
+  const c1 = document.getElementById('cap1');
+  if (!c0.value && !c1.value) { showToast('すでに空です'); return; }
+  c0.value = ''; c1.value = '';
+  showToast('キャプションをクリアしました');
+}
+
+// 新規作成（記録者・場所は保持）
+function newReport() {
+  if (editingId && !confirm('編集中の内容を破棄して新規作成しますか？\n（クラウドの保存済みデータは残ります）')) return;
+
+  const today = new Date();
+  document.getElementById('f-date').value = today.toISOString().split('T')[0];
+  updateDay();
+
+  document.getElementById('f-time-start').value = '';
+  document.getElementById('f-time-end').value = '';
+  document.getElementById('f-weather').value = '';
+
+  ['p-preschool','p-elementary','p-junior','p-senior',
+   'p-school','p-community','p-univ','p-other'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  calcTotal();
+
+  document.getElementById('f-content').value = '';
+  document.getElementById('f-impression').value = '';
+  updateCounter('f-content','cnt-content',300);
+  updateCounter('f-impression','cnt-impression',200);
+
+  removePhoto(0); removePhoto(1);
+  document.getElementById('cap0').value = '';
+  document.getElementById('cap1').value = '';
+  loadedPhotoIds = [null, null];
+  photoChanged = [false, false];
+
+  setEditingState(null);
+  switchTab(0);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  showToast('新規作成に切り替えました');
+}
 
 function showToast(msg) {
   const t = document.getElementById('toast');

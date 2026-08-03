@@ -1,5 +1,5 @@
 // バージョンを上げると古いキャッシュが自動削除される
-const CACHE_NAME = 'katsudo-nippo-v5';
+const CACHE_NAME = 'katsudo-nippo-v7';
 const CORE_ASSETS = [
   './index.html',
   './manifest.json',
