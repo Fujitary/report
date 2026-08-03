@@ -29,36 +29,109 @@
     --accent: #1e40af;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Noto Sans JP', sans-serif; background: #e8edf5; min-height: 100vh; color: var(--text); }
+  body {
+    font-family: 'Noto Sans JP', sans-serif; background: #e8edf5;
+    color: var(--text);
+    overscroll-behavior-y: none;
+    -webkit-text-size-adjust: 100%;
+  }
   #app { display: flex; flex-direction: column; min-height: 100vh; }
 
-  header {
-    background: var(--blue); color: white; padding: 14px 16px;
-    display: flex; align-items: center; justify-content: space-between;
-    position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  /* ===== 固定ヘッダー ===== */
+  .fixed-top {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    padding-top: env(safe-area-inset-top);
+    background: var(--blue);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.18);
   }
-  header h1 { font-family: 'Noto Serif JP', serif; font-size: 18px; font-weight: 700; letter-spacing: 0.05em; }
-  .header-btn {
-    background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4);
-    color: white; padding: 6px 14px; border-radius: 6px; font-size: 13px;
-    font-family: 'Noto Sans JP', sans-serif; cursor: pointer; transition: background 0.2s;
-  }
-  .header-btn:hover { background: rgba(255,255,255,0.3); }
-  .header-btn.primary { background: white; color: var(--blue); font-weight: 500; }
 
+  header {
+    background: var(--blue); color: white;
+    padding: 10px 12px;
+    display: flex; align-items: center; gap: 6px;
+    min-height: 52px;
+  }
+  header h1 {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 16px; font-weight: 700; letter-spacing: 0.02em;
+    white-space: nowrap;      /* 2段折り返しを防止 */
+    flex-shrink: 0;
+    margin-right: auto;
+  }
+  .header-actions { display: flex; gap: 5px; flex-shrink: 0; }
+
+  .header-btn {
+    background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.35);
+    color: white; padding: 6px 9px; border-radius: 7px; font-size: 12px;
+    font-family: 'Noto Sans JP', sans-serif; cursor: pointer;
+    transition: background 0.2s; white-space: nowrap; line-height: 1.2;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .header-btn:active { background: rgba(255,255,255,0.35); }
+  .header-btn.primary { background: white; color: var(--blue); font-weight: 700; }
+  .header-btn.icon-only { padding: 6px 8px; font-size: 14px; }
+
+  /* 狭い画面ではさらに詰める */
+  @media (max-width: 400px) {
+    header { padding: 8px 10px; gap: 4px; }
+    header h1 { font-size: 14px; }
+    .header-btn { padding: 5px 7px; font-size: 11px; }
+  }
+  @media (max-width: 340px) {
+    header h1 { font-size: 13px; }
+    .header-btn { padding: 5px 6px; font-size: 10px; }
+  }
+
+  /* ===== 固定タブバー ===== */
   .tab-bar {
-    display: flex; background: white; border-bottom: 2px solid var(--blue-light);
-    position: sticky; top: 53px; z-index: 99;
+    display: flex; background: white;
+    border-bottom: 2px solid var(--blue-light);
+    position: relative;
   }
   .tab {
-    flex: 1; padding: 10px 4px; text-align: center; font-size: 12px;
-    color: var(--gray); cursor: pointer; transition: all 0.2s;
-    border-bottom: 3px solid transparent; margin-bottom: -2px;
+    flex: 1; padding: 8px 2px 9px; text-align: center; font-size: 11.5px;
+    color: var(--gray); cursor: pointer;
+    transition: color 0.25s ease;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
   }
-  .tab.active { color: var(--blue); border-bottom-color: var(--blue); font-weight: 700; }
-  .tab .tab-icon { font-size: 18px; display: block; margin-bottom: 2px; }
+  .tab.active { color: var(--blue); font-weight: 700; }
+  .tab .tab-icon { font-size: 17px; display: block; margin-bottom: 1px; }
 
-  main { flex: 1; padding: 16px; max-width: 600px; margin: 0 auto; width: 100%; }
+  /* スライドするインジケーター */
+  .tab-indicator {
+    position: absolute; bottom: -2px; left: 0;
+    height: 3px; background: var(--blue);
+    border-radius: 2px 2px 0 0;
+    width: 25%;
+    transition: transform 0.32s cubic-bezier(0.4, 0.0, 0.2, 1);
+    will-change: transform;
+  }
+
+  /* ===== スワイプ用スライダー ===== */
+  .slider-viewport {
+    overflow: hidden;
+    width: 100%;
+    touch-action: pan-y;
+  }
+  .slider-track {
+    display: flex;
+    width: 400%;
+    will-change: transform;
+    transform: translate3d(0,0,0);
+  }
+  .slider-track.animating {
+    transition: transform 0.34s cubic-bezier(0.25, 0.8, 0.35, 1);
+  }
+  .slide {
+    width: 25%;
+    flex-shrink: 0;
+    padding: 16px 14px 28px;
+    align-self: flex-start;
+  }
+
+  main { flex: 1; max-width: 640px; margin: 0 auto; width: 100%; }
+  #preview-view { padding: 16px 14px 28px; }
 
   .section-card {
     background: white; border-radius: 10px; margin-bottom: 16px;
@@ -269,7 +342,7 @@
     background: #7c3aed; color: white; padding: 7px 14px;
     font-size: 12px; display: none; align-items: center;
     justify-content: space-between; gap: 10px;
-    position: sticky; top: 53px; z-index: 98;
+    position: relative; z-index: 98;
   }
   .editing-banner.show { display: flex; }
   .editing-banner button {
@@ -373,33 +446,41 @@
 </head>
 <body>
 <div id="app">
-  <header>
-    <h1>📋 活動日報</h1>
-    <div style="display:flex;gap:8px;">
-      <button class="header-btn" onclick="switchView('edit')" id="btn-edit">編集</button>
-      <button class="header-btn" onclick="saveToCloud()" title="クラウドに保存">☁️</button>
-      <button class="header-btn" onclick="switchView('preview')" id="btn-preview">プレビュー</button>
-      <button class="header-btn primary" onclick="generatePDF()">📄 PDF</button>
+  <!-- 固定エリア（ヘッダー＋タブ） -->
+  <div class="fixed-top" id="fixed-top">
+    <header>
+      <h1>📋 活動日報</h1>
+      <div class="header-actions">
+        <button class="header-btn" onclick="switchView('edit')" id="btn-edit">編集</button>
+        <button class="header-btn icon-only" onclick="saveToCloud()" title="クラウドに保存">☁️</button>
+        <button class="header-btn" onclick="switchView('preview')" id="btn-preview">確認</button>
+        <button class="header-btn primary" onclick="generatePDF()">PDF</button>
+      </div>
+    </header>
+
+    <div class="tab-bar">
+      <div class="tab active" onclick="switchTab(0)" id="tab0"><span class="tab-icon">📄</span>基本情報</div>
+      <div class="tab" onclick="switchTab(1)" id="tab1"><span class="tab-icon">✏️</span>活動記録</div>
+      <div class="tab" onclick="switchTab(2)" id="tab2"><span class="tab-icon">📷</span>写真記録</div>
+      <div class="tab" onclick="switchTab(3)" id="tab3"><span class="tab-icon">🗂</span>アーカイブ</div>
+      <div class="tab-indicator" id="tab-indicator"></div>
     </div>
-  </header>
 
-  <div class="tab-bar">
-    <div class="tab active" onclick="switchTab(0)" id="tab0"><span class="tab-icon">📄</span>基本情報</div>
-    <div class="tab" onclick="switchTab(1)" id="tab1"><span class="tab-icon">✏️</span>活動記録</div>
-    <div class="tab" onclick="switchTab(2)" id="tab2"><span class="tab-icon">📷</span>写真記録</div>
-    <div class="tab" onclick="switchTab(3)" id="tab3"><span class="tab-icon">🗂</span>アーカイブ</div>
+    <div class="editing-banner" id="editing-banner">
+      <span id="editing-banner-text">編集中</span>
+      <button onclick="newReport()">新規に切替</button>
+    </div>
   </div>
 
-  <div class="editing-banner" id="editing-banner">
-    <span id="editing-banner-text">編集中</span>
-    <button onclick="newReport()">新規に切替</button>
-  </div>
+  <div id="fixed-spacer"></div>
 
   <main>
     <div id="edit-view">
+      <div class="slider-viewport" id="slider-viewport">
+        <div class="slider-track" id="slider-track">
 
       <!-- TAB 0: 基本情報 -->
-      <div id="section-tab0">
+      <div id="section-tab0" class="slide">
         <div class="section-card">
           <div class="section-header">基本情報</div>
           <div class="section-body">
@@ -521,7 +602,7 @@
       </div><!-- /section-tab0 -->
 
       <!-- TAB 1: 活動記録 -->
-      <div id="section-tab1" style="display:none;">
+      <div id="section-tab1" class="slide">
         <div class="section-card">
           <div class="section-header">活動の記録</div>
           <div class="section-body">
@@ -555,7 +636,7 @@
       </div>
 
       <!-- TAB 2: 写真記録 -->
-      <div id="section-tab2" style="display:none;">
+      <div id="section-tab2" class="slide">
         <div class="section-card">
           <div class="section-header">写真記録</div>
           <div class="section-body">
@@ -603,7 +684,7 @@
       </div>
 
       <!-- TAB 3: アーカイブ -->
-      <div id="section-tab3" style="display:none;">
+      <div id="section-tab3" class="slide">
         <div class="section-card">
           <div class="section-header">クラウド保存された日報</div>
           <div class="section-body">
@@ -632,6 +713,8 @@
         </div>
       </div>
 
+        </div><!-- /slider-track -->
+      </div><!-- /slider-viewport -->
     </div><!-- /edit-view -->
 
     <!-- PREVIEW VIEW -->
@@ -660,6 +743,26 @@ window.addEventListener('load', () => {
   document.getElementById('f-date').addEventListener('change', updateDay);
   loadGasUrl();
   setEditingState(null);
+  adjustTopSpacing();
+  initSwipe();
+  switchTab(0, { instant: true });
+
+  // レイアウト変化に追従
+  window.addEventListener('resize', () => { adjustTopSpacing(); syncSlideHeight(); });
+  window.addEventListener('orientationchange', () => {
+    setTimeout(() => { adjustTopSpacing(); syncSlideHeight(); }, 250);
+  });
+
+  // 入力で高さが変わる要素を監視
+  if (window.ResizeObserver) {
+    const ro = new ResizeObserver(() => syncSlideHeight());
+    for (let i = 0; i < 4; i++) {
+      const el = document.getElementById('section-tab' + i);
+      if (el) ro.observe(el);
+    }
+    const ft = document.getElementById('fixed-top');
+    if (ft) new ResizeObserver(() => adjustTopSpacing()).observe(ft);
+  }
 });
 
 function updateDay() {
@@ -707,13 +810,154 @@ function getPaxValues() {
 }
 
 // タブ
-function switchTab(n) {
-  for (let i=0;i<4;i++) {
-    document.getElementById(`tab${i}`).classList.toggle('active', i===n);
-    document.getElementById(`section-tab${i}`).style.display = i===n ? '' : 'none';
+// ============================================================
+// タブ切替 ＋ スワイプ（滑らかなスライド）
+// ============================================================
+const TAB_COUNT = 4;
+
+function switchTab(n, opts) {
+  n = Math.max(0, Math.min(TAB_COUNT - 1, n));
+  const animate = !(opts && opts.instant);
+
+  // タブの見た目
+  for (let i = 0; i < TAB_COUNT; i++) {
+    document.getElementById(`tab${i}`).classList.toggle('active', i === n);
   }
+
+  // インジケーターを移動
+  const ind = document.getElementById('tab-indicator');
+  if (ind) ind.style.transform = `translate3d(${n * 100}%, 0, 0)`;
+
+  // スライドを移動
+  const track = document.getElementById('slider-track');
+  if (track) {
+    track.classList.toggle('animating', animate);
+    track.style.transform = `translate3d(-${n * 25}%, 0, 0)`;
+  }
+
   currentTab = n;
+  syncSlideHeight();
+
   if (n === 3) fetchArchive();
+}
+
+// アクティブなスライドの高さにトラックを合わせる（余白が出ないように）
+function syncSlideHeight() {
+  const track = document.getElementById('slider-track');
+  if (!track) return;
+  const active = document.getElementById(`section-tab${currentTab}`);
+  if (!active) return;
+  // 一瞬で反映されないケースがあるので次フレームで測定
+  requestAnimationFrame(() => {
+    track.style.height = active.offsetHeight + 'px';
+  });
+}
+
+// 固定ヘッダーの高さぶんだけ本文を押し下げる
+function adjustTopSpacing() {
+  const top = document.getElementById('fixed-top');
+  const spacer = document.getElementById('fixed-spacer');
+  if (top && spacer) spacer.style.height = top.offsetHeight + 'px';
+}
+
+// ============================================================
+// スワイプジェスチャー
+// ============================================================
+function initSwipe() {
+  const viewport = document.getElementById('slider-viewport');
+  const track = document.getElementById('slider-track');
+  if (!viewport || !track) return;
+
+  let startX = 0, startY = 0;
+  let deltaX = 0;
+  let dragging = false;   // 横スワイプ確定
+  let decided = false;    // 縦横の判定済み
+  let startTime = 0;
+
+  const THRESHOLD_RATIO = 0.22;  // この割合を超えたら切替
+  const VELOCITY = 0.35;         // フリック判定（px/ms）
+
+  function isInteractive(el) {
+    return el.closest('input, textarea, select, button, a, .photo-slot, .archive-item');
+  }
+
+  viewport.addEventListener('touchstart', (e) => {
+    if (e.touches.length !== 1) return;
+    // 入力要素の上では発動させない（誤操作防止）
+    if (isInteractive(e.target)) { decided = true; dragging = false; return; }
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    deltaX = 0;
+    dragging = false;
+    decided = false;
+    startTime = Date.now();
+    track.classList.remove('animating');
+  }, { passive: true });
+
+  viewport.addEventListener('touchmove', (e) => {
+    if (decided && !dragging) return;
+    if (e.touches.length !== 1) return;
+
+    const dx = e.touches[0].clientX - startX;
+    const dy = e.touches[0].clientY - startY;
+
+    // 最初の動きで縦スクロールか横スワイプか判定
+    if (!decided) {
+      if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+      decided = true;
+      dragging = Math.abs(dx) > Math.abs(dy) * 1.3;
+      if (!dragging) return;
+    }
+
+    if (!dragging) return;
+
+    // 端では引っ張り抵抗をつける
+    let d = dx;
+    if ((currentTab === 0 && dx > 0) || (currentTab === TAB_COUNT - 1 && dx < 0)) {
+      d = dx * 0.32;
+    }
+    deltaX = d;
+
+    const base = -currentTab * 25;
+    const pct = (d / viewport.offsetWidth) * 25;
+    track.style.transform = `translate3d(${base + pct}%, 0, 0)`;
+
+    // インジケーターも指に追従
+    const ind = document.getElementById('tab-indicator');
+    if (ind) {
+      const ipct = currentTab * 100 - (d / viewport.offsetWidth) * 100;
+      ind.style.transition = 'none';
+      ind.style.transform = `translate3d(${ipct}%, 0, 0)`;
+    }
+
+    e.preventDefault();
+  }, { passive: false });
+
+  function endSwipe() {
+    const ind = document.getElementById('tab-indicator');
+    if (ind) ind.style.transition = '';
+
+    if (!dragging) { decided = false; return; }
+
+    const w = viewport.offsetWidth;
+    const elapsed = Date.now() - startTime;
+    const velocity = Math.abs(deltaX) / Math.max(elapsed, 1);
+    const passed = Math.abs(deltaX) > w * THRESHOLD_RATIO || velocity > VELOCITY;
+
+    let next = currentTab;
+    if (passed) {
+      if (deltaX < 0 && currentTab < TAB_COUNT - 1) next = currentTab + 1;
+      else if (deltaX > 0 && currentTab > 0) next = currentTab - 1;
+    }
+
+    switchTab(next);
+    dragging = false;
+    decided = false;
+    deltaX = 0;
+  }
+
+  viewport.addEventListener('touchend', endSwipe, { passive: true });
+  viewport.addEventListener('touchcancel', endSwipe, { passive: true });
 }
 
 // ビュー
@@ -723,6 +967,7 @@ function switchView(v) {
   document.getElementById('btn-edit').style.fontWeight    = v==='edit'    ? '700' : '400';
   document.getElementById('btn-preview').style.fontWeight = v==='preview' ? '700' : '400';
   if (v==='preview') renderPreview();
+  else syncSlideHeight();
 }
 
 // 写真
@@ -738,6 +983,7 @@ function handlePhoto(idx, input) {
     slot.classList.add('has-img');
     document.getElementById(`rm${idx}`).style.display = 'flex';
     document.getElementById(`overlay${idx}`).textContent = file.name;
+    syncSlideHeight();
   };
   reader.readAsDataURL(file);
 }
@@ -1336,6 +1582,7 @@ async function saveToCloud() {
     showToast('保存に失敗：' + e.message);
   } finally {
     if (btn) { btn.disabled = false; btn.innerHTML = editingId ? '☁️ 上書き保存' : '☁️ クラウドに保存'; }
+    syncSlideHeight();
   }
 }
 
@@ -1382,6 +1629,7 @@ function renderArchive() {
   if (filtered.length === 0) {
     listEl.innerHTML = `<div style="text-align:center;padding:30px 10px;color:var(--gray);font-size:13px;">
       ${q ? '該当する日報がありません' : 'まだ保存された日報はありません'}</div>`;
+    syncSlideHeight();
     return;
   }
 
@@ -1403,6 +1651,7 @@ function renderArchive() {
       </div>
     </div>`;
   }).join('');
+  syncSlideHeight();
 }
 
 function escapeHtml(s) {
