@@ -1,10 +1,14 @@
 // バージョンを上げると古いキャッシュが自動削除される
-const CACHE_NAME = 'katsudo-nippo-v7';
+const CACHE_NAME = 'katsudo-nippo-v8';
 const CORE_ASSETS = [
   './index.html',
   './manifest.json',
   './icon-192.png',
-  './icon-512.png'
+  './icon-512.png',
+  './favicon.ico',
+  './favicon-32.png',
+  './favicon-16.png',
+  './apple-touch-icon.png'
 ];
 
 // インストール：コアファイルのみキャッシュ（外部CDNは除外）
